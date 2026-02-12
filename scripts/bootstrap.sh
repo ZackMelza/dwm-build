@@ -55,4 +55,45 @@ DWM_REPO_ROOT="$repo_root" bash -c "'$repo_root/scripts/install-dwm-stack.sh' --
 # shellcheck disable=SC2086
 DWM_REPO_ROOT="$repo_root" bash -c "'$repo_root/scripts/post-install.sh' --mode '$mode' --force --setup-rofi --setup-shell --display-manager '$dm' --dm-theme '$dm_theme' --rebuild-dwm $extra_post"
 
+ensure_session_entry() {
+  local session_file="/usr/share/xsessions/dwm.desktop"
+  local dwm_bin=""
+
+  if command -v dwm >/dev/null 2>&1; then
+    dwm_bin="$(command -v dwm)"
+  elif [[ -x /usr/local/bin/dwm ]]; then
+    dwm_bin="/usr/local/bin/dwm"
+  elif [[ -x /usr/bin/dwm ]]; then
+    dwm_bin="/usr/bin/dwm"
+  fi
+
+  if [[ $dry_run -eq 1 ]]; then
+    echo "[dry-run] ensure $session_file exists"
+    return 0
+  fi
+
+  if [[ ! -f "$session_file" ]]; then
+    if [[ $EUID -eq 0 ]]; then
+      install -Dm644 "$repo_root/sessions/dwm.desktop" "$session_file"
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo install -Dm644 "$repo_root/sessions/dwm.desktop" "$session_file"
+    else
+      echo "Warning: missing $session_file and no sudo to install it." >&2
+      return 0
+    fi
+  fi
+
+  if [[ -n "$dwm_bin" ]]; then
+    if [[ $EUID -eq 0 ]]; then
+      sed -i "s|^Exec=.*|Exec=$dwm_bin|; s|^TryExec=.*|TryExec=$dwm_bin|" "$session_file"
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo sed -i "s|^Exec=.*|Exec=$dwm_bin|; s|^TryExec=.*|TryExec=$dwm_bin|" "$session_file"
+    fi
+  fi
+}
+
+if [[ "$dm" != "none" ]]; then
+  ensure_session_entry
+fi
+
 echo "Bootstrap complete."
