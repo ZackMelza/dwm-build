@@ -57,20 +57,59 @@ DWM_REPO_ROOT="$repo_root" bash -c "'$repo_root/scripts/post-install.sh' --mode 
 
 ensure_session_entry() {
   local session_file="/usr/share/xsessions/dwm.desktop"
-  local dwm_bin=""
+  local wrapper="/usr/local/bin/dwm-session"
 
-  if command -v dwm >/dev/null 2>&1; then
-    dwm_bin="$(command -v dwm)"
-  elif [[ -x /usr/local/bin/dwm ]]; then
-    dwm_bin="/usr/local/bin/dwm"
-  elif [[ -x /usr/bin/dwm ]]; then
-    dwm_bin="/usr/bin/dwm"
-  fi
+  install_wrapper() {
+    if [[ $dry_run -eq 1 ]]; then
+      echo "[dry-run] install $wrapper"
+      return 0
+    fi
+
+    local payload='#!/usr/bin/env sh
+set -eu
+LOG="${XDG_RUNTIME_DIR:-/tmp}/dwm-session.log"
+{
+  echo "== $(date) =="
+  echo "USER=$USER HOME=$HOME"
+  echo "PATH=$PATH"
+} >> "$LOG" 2>&1
+
+if command -v dwm-autostart.sh >/dev/null 2>&1; then
+  dwm-autostart.sh >> "$LOG" 2>&1 &
+elif [ -x "$HOME/.local/bin/dwm-autostart.sh" ]; then
+  "$HOME/.local/bin/dwm-autostart.sh" >> "$LOG" 2>&1 &
+fi
+
+DWM_BIN="$(command -v dwm 2>/dev/null || true)"
+[ -z "$DWM_BIN" ] && [ -x /usr/local/bin/dwm ] && DWM_BIN=/usr/local/bin/dwm
+[ -z "$DWM_BIN" ] && [ -x /usr/bin/dwm ] && DWM_BIN=/usr/bin/dwm
+
+if [ -z "$DWM_BIN" ]; then
+  echo "dwm binary not found" >> "$LOG"
+  exit 127
+fi
+
+exec "$DWM_BIN" >> "$LOG" 2>&1
+'
+
+    if [[ $EUID -eq 0 ]]; then
+      printf '%s\n' "$payload" > "$wrapper"
+      chmod 755 "$wrapper"
+    elif command -v sudo >/dev/null 2>&1; then
+      printf '%s\n' "$payload" | sudo tee "$wrapper" >/dev/null
+      sudo chmod 755 "$wrapper"
+    else
+      echo "Warning: no sudo, cannot install $wrapper" >&2
+    fi
+  }
 
   if [[ $dry_run -eq 1 ]]; then
     echo "[dry-run] ensure $session_file exists"
+    install_wrapper
     return 0
   fi
+
+  install_wrapper
 
   if [[ ! -f "$session_file" ]]; then
     if [[ $EUID -eq 0 ]]; then
@@ -83,12 +122,10 @@ ensure_session_entry() {
     fi
   fi
 
-  if [[ -n "$dwm_bin" ]]; then
-    if [[ $EUID -eq 0 ]]; then
-      sed -i "s|^Exec=.*|Exec=$dwm_bin|; s|^TryExec=.*|TryExec=$dwm_bin|" "$session_file"
-    elif command -v sudo >/dev/null 2>&1; then
-      sudo sed -i "s|^Exec=.*|Exec=$dwm_bin|; s|^TryExec=.*|TryExec=$dwm_bin|" "$session_file"
-    fi
+  if [[ $EUID -eq 0 ]]; then
+    sed -i "s|^Exec=.*|Exec=$wrapper|; s|^TryExec=.*|TryExec=$wrapper|" "$session_file"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo sed -i "s|^Exec=.*|Exec=$wrapper|; s|^TryExec=.*|TryExec=$wrapper|" "$session_file"
   fi
 }
 
