@@ -147,15 +147,22 @@ link_or_copy() {
   fi
 }
 
-script_path="${BASH_SOURCE[0]}"
-if command -v readlink >/dev/null 2>&1; then
-  resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
-  [[ -n "$resolved" ]] && script_path="$resolved"
+if [[ -n "${DWM_REPO_ROOT:-}" && -d "${DWM_REPO_ROOT}/scripts" ]]; then
+  repo_root="$DWM_REPO_ROOT"
+elif [[ -f "$HOME/.config/dwm/repo_root" ]]; then
+  repo_root="$(sed -n '1p' "$HOME/.config/dwm/repo_root")"
+else
+  script_path="${BASH_SOURCE[0]}"
+  if command -v readlink >/dev/null 2>&1; then
+    resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
+    [[ -n "$resolved" ]] && script_path="$resolved"
+  fi
+  repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 fi
-repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
 run_cmd "mkdir -p '$HOME/.local/bin'"
 run_cmd "mkdir -p '$HOME/.config/dwm'"
+run_cmd "printf '%s\n' '$repo_root' > '$HOME/.config/dwm/repo_root'"
 
 scripts=(
   dwm-autostart.sh
@@ -190,27 +197,27 @@ profile_args="--force"
 if [[ -n "$profile" ]]; then
   profile_args="--profile '$profile' --force"
 fi
-run_cmd "'$HOME/.local/bin/set-dwm-profile.sh' $profile_args"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/set-dwm-profile.sh' $profile_args"
 keybind_args=""
 if [[ -n "$profile" ]]; then
   keybind_args="--profile '$profile'"
 fi
-run_cmd "'$HOME/.local/bin/set-dwm-keybind-profile.sh' $keybind_args"
-run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode '$mode' --force"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/set-dwm-keybind-profile.sh' $keybind_args"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode '$mode' --force"
 
 if [[ $setup_rofi -eq 1 ]]; then
   if [[ $backup -eq 1 ]]; then
-    run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force --backup"
   else
-    run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force"
   fi
 fi
 
 if [[ $setup_shell -eq 1 ]]; then
   if [[ $backup -eq 1 ]]; then
-    run_cmd "'$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force --backup"
   else
-    run_cmd "'$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force"
   fi
 fi
 
@@ -220,9 +227,9 @@ if [[ "$dm_theme" != "none" ]]; then
     exit 1
   fi
   if [[ $backup -eq 1 ]]; then
-    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
   else
-    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
   fi
 fi
 
@@ -231,7 +238,7 @@ if [[ $rebuild_dwm -eq 1 ]]; then
   if [[ -n "$profile" ]]; then
     rebuild_args="--profile '$profile'"
   fi
-  run_cmd "'$HOME/.local/bin/rebuild-dwm-profile.sh' $rebuild_args"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/rebuild-dwm-profile.sh' $rebuild_args"
 fi
 
 if [[ $install_session -eq 1 ]]; then

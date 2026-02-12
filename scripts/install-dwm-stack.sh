@@ -301,6 +301,8 @@ run_cmd "$SUDO make -C '$repo_root' install"
 run_cmd "'$repo_root/scripts/set-dwm-profile.sh' --profile '$profile' --force"
 
 run_cmd "mkdir -p '$HOME/.local/bin'"
+run_cmd "mkdir -p '$HOME/.config/dwm'"
+run_cmd "printf '%s\n' '$repo_root' > '$HOME/.config/dwm/repo_root'"
 
 install_to_user_bin() {
   local src="$1"
@@ -336,16 +338,16 @@ install_to_user_bin "$repo_root/scripts/health-check.sh" "$HOME/.local/bin/dwm-h
 install_to_user_bin "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bin/dwm-uninstall.sh"
 install_to_user_bin "$repo_root/scripts/generate-keybind-cheatsheet.sh" "$HOME/.local/bin/generate-keybind-cheatsheet.sh"
 install_to_user_bin "$repo_root/scripts/show-keybinds.sh" "$HOME/.local/bin/show-keybinds.sh"
-run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force"
 if [[ $backup -eq 1 ]]; then
-  run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force --backup"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force --backup"
 else
-  run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force"
 fi
 if [[ $backup -eq 1 ]]; then
-  run_cmd "'$HOME/.local/bin/setup-shell-suite.sh' --mode copy --force --backup"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode copy --force --backup"
 else
-  run_cmd "'$HOME/.local/bin/setup-shell-suite.sh' --mode copy --force"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode copy --force"
 fi
 
 if [[ $install_xinitrc -eq 1 ]]; then
@@ -371,9 +373,9 @@ install_display_manager
 
 if [[ "$dm_theme" != "none" && ( "$display_manager" == "sddm" || "$display_manager" == "lightdm" ) ]]; then
   if [[ $backup -eq 1 ]]; then
-    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
   else
-    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
   fi
 fi
 

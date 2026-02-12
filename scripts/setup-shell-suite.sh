@@ -89,12 +89,18 @@ link_or_copy() {
   fi
 }
 
-script_path="${BASH_SOURCE[0]}"
-if command -v readlink >/dev/null 2>&1; then
-  resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
-  [[ -n "$resolved" ]] && script_path="$resolved"
+if [[ -n "${DWM_REPO_ROOT:-}" && -d "${DWM_REPO_ROOT}/scripts" ]]; then
+  repo_root="$DWM_REPO_ROOT"
+elif [[ -f "$HOME/.config/dwm/repo_root" ]]; then
+  repo_root="$(sed -n '1p' "$HOME/.config/dwm/repo_root")"
+else
+  script_path="${BASH_SOURCE[0]}"
+  if command -v readlink >/dev/null 2>&1; then
+    resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
+    [[ -n "$resolved" ]] && script_path="$resolved"
+  fi
+  repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 fi
-repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
 run_cmd "mkdir -p '$HOME/.config'"
 link_or_copy "$repo_root/kitty" "$HOME/.config/kitty" 1

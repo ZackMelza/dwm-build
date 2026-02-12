@@ -51,8 +51,8 @@ extra_post=""
 [[ $dry_run -eq 1 ]] && extra_install+=" --dry-run" && extra_post+=" --dry-run"
 
 # shellcheck disable=SC2086
-bash -c "'$repo_root/scripts/install-dwm-stack.sh' --display-manager '$dm' --dm-theme '$dm_theme' --install-xinitrc --install-session $extra_install"
+DWM_REPO_ROOT="$repo_root" bash -c "'$repo_root/scripts/install-dwm-stack.sh' --display-manager '$dm' --dm-theme '$dm_theme' --install-xinitrc --install-session $extra_install"
 # shellcheck disable=SC2086
-bash -c "'$repo_root/scripts/post-install.sh' --mode '$mode' --force --setup-rofi --setup-shell --display-manager '$dm' --dm-theme '$dm_theme' --rebuild-dwm $extra_post"
+DWM_REPO_ROOT="$repo_root" bash -c "'$repo_root/scripts/post-install.sh' --mode '$mode' --force --setup-rofi --setup-shell --display-manager '$dm' --dm-theme '$dm_theme' --rebuild-dwm $extra_post"
 
 echo "Bootstrap complete."
