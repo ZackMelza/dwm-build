@@ -1,0 +1,9 @@
+@import "config-rofi-beats.rasi"
+
+window {
+  width: 40%;
+}
+
+listview {
+  lines: 0;
+}

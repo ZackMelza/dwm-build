@@ -10,6 +10,7 @@ Installs a portable DWM stack with distro-aware package selection.
 Options:
   --profile laptop|desktop    Force machine profile (default: auto detect)
   --display-manager NAME      Set login manager: lightdm|sddm|greetd|ly|none
+  --dm-theme NAME             Login theme: none|hyprlike (for sddm/lightdm)
   --enable-services           Enable common services (NetworkManager, bluetooth, display manager)
   --install-xinitrc           Install repo xinitrc to ~/.xinitrc
   --install-session           Install sessions/dwm.desktop into /usr/share/xsessions (sudo required)
@@ -20,6 +21,7 @@ USAGE
 
 profile=""
 display_manager="none"
+dm_theme="none"
 enable_services=0
 install_xinitrc=0
 install_session=0
@@ -33,6 +35,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --display-manager)
       display_manager="${2:-}"
+      shift 2
+      ;;
+    --dm-theme)
+      dm_theme="${2:-}"
       shift 2
       ;;
     --enable-services)
@@ -115,6 +121,11 @@ if [[ "$display_manager" != "lightdm" && "$display_manager" != "sddm" && "$displ
   exit 1
 fi
 
+if [[ "$dm_theme" != "none" && "$dm_theme" != "hyprlike" ]]; then
+  echo "Invalid dm theme: $dm_theme" >&2
+  exit 1
+fi
+
 if [[ ! -f /etc/os-release ]]; then
   echo "/etc/os-release not found; distro detection failed." >&2
   exit 1
@@ -127,10 +138,10 @@ os_like="${ID_LIKE:-}"
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
-common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom dmenu alacritty rofi dunst network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip"
-common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools alacritty rofi dunst network-manager-gnome blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip"
-common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip"
-common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip"
+common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom dmenu alacritty rofi dunst network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools alacritty rofi dunst network-manager-gnome blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
 
 laptop_pkgs_arch="tlp tlp-rdw"
 laptop_pkgs_debian="tlp"
@@ -289,7 +300,13 @@ run_cmd "install -m 755 '$repo_root/scripts/rebuild-dwm-profile.sh' '$HOME/.loca
 run_cmd "install -m 755 '$repo_root/scripts/dwm-power-menu.sh' '$HOME/.local/bin/dwm-power-menu.sh'"
 run_cmd "install -m 755 '$repo_root/scripts/post-install.sh' '$HOME/.local/bin/post-install.sh'"
 run_cmd "install -m 755 '$repo_root/scripts/setup-dwmblocks.sh' '$HOME/.local/bin/setup-dwmblocks.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/setup-rofi-suite.sh' '$HOME/.local/bin/setup-rofi-suite.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-beats.sh' '$HOME/.local/bin/rofi-beats.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-search.sh' '$HOME/.local/bin/rofi-search.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-calc.sh' '$HOME/.local/bin/rofi-calc.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/setup-display-manager-theme.sh' '$HOME/.local/bin/setup-display-manager-theme.sh'"
 run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force"
+run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force"
 
 if [[ $install_xinitrc -eq 1 ]]; then
   if [[ -f "$HOME/.xinitrc" ]]; then
@@ -303,6 +320,10 @@ if [[ $install_session -eq 1 ]]; then
 fi
 
 install_display_manager
+
+if [[ "$dm_theme" != "none" && ( "$display_manager" == "sddm" || "$display_manager" == "lightdm" ) ]]; then
+  run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+fi
 
 if [[ $enable_services -eq 1 ]]; then
   enable_service NetworkManager

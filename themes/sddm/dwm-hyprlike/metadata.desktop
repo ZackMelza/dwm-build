@@ -1,0 +1,11 @@
+[SddmGreeterTheme]
+Name=DWM Hyprlike
+Description=Minimal blue-toned SDDM theme for DWM workflow
+Author=ZackMelza
+Copyright=MIT
+License=MIT
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+Theme-Id=dwm-hyprlike
+Theme-API=2.0

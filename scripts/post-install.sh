@@ -11,6 +11,9 @@ Options:
   --mode symlink|copy       How to deploy files (default: symlink)
   --profile laptop|desktop  Force profile before writing host config
   --install-session         Install sessions/dwm.desktop to /usr/share/xsessions (sudo)
+  --setup-rofi              Install Hypr-like rofi scripts/config
+  --dm-theme hyprlike       Apply login theme to selected --display-manager
+  --display-manager NAME    For --dm-theme: lightdm|sddm
   --rebuild-dwm             Rebuild/install dwm after profile deployment
   --force                   Overwrite existing files/links
   --dry-run                 Print changes without writing
@@ -21,6 +24,9 @@ USAGE
 mode="symlink"
 profile=""
 install_session=0
+setup_rofi=0
+dm_theme="none"
+display_manager="none"
 rebuild_dwm=0
 force=0
 dry_run=0
@@ -38,6 +44,18 @@ while [[ $# -gt 0 ]]; do
     --install-session)
       install_session=1
       shift
+      ;;
+    --setup-rofi)
+      setup_rofi=1
+      shift
+      ;;
+    --dm-theme)
+      dm_theme="${2:-}"
+      shift 2
+      ;;
+    --display-manager)
+      display_manager="${2:-}"
+      shift 2
       ;;
     --rebuild-dwm)
       rebuild_dwm=1
@@ -65,6 +83,16 @@ done
 
 if [[ "$mode" != "symlink" && "$mode" != "copy" ]]; then
   echo "Invalid mode: $mode" >&2
+  exit 1
+fi
+
+if [[ "$dm_theme" != "none" && "$dm_theme" != "hyprlike" ]]; then
+  echo "Invalid dm theme: $dm_theme" >&2
+  exit 1
+fi
+
+if [[ "$display_manager" != "none" && "$display_manager" != "lightdm" && "$display_manager" != "sddm" ]]; then
+  echo "Invalid display manager for post-install theming: $display_manager" >&2
   exit 1
 fi
 
@@ -111,6 +139,8 @@ scripts=(
   rebuild-dwm-profile.sh
   dwm-power-menu.sh
   setup-dwmblocks.sh
+  setup-rofi-suite.sh
+  setup-display-manager-theme.sh
 )
 
 for script in "${scripts[@]}"; do
@@ -129,6 +159,18 @@ fi
 run_cmd "'$HOME/.local/bin/set-dwm-profile.sh' $profile_args"
 run_cmd "'$HOME/.local/bin/set-dwm-keybind-profile.sh' ${profile:+--profile '$profile'}"
 run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode '$mode' --force"
+
+if [[ $setup_rofi -eq 1 ]]; then
+  run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force"
+fi
+
+if [[ "$dm_theme" != "none" ]]; then
+  if [[ "$display_manager" == "none" ]]; then
+    echo "--dm-theme requires --display-manager lightdm|sddm" >&2
+    exit 1
+  fi
+  run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+fi
 
 if [[ $rebuild_dwm -eq 1 ]]; then
   rebuild_args=""

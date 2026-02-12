@@ -10,6 +10,8 @@ This repo turns a plain `dwm` source tree into a reproducible, distro-aware setu
 - Compile-time keybind profile switching (laptop vs desktop)
 - DWM autostart service/bootstrap flow (polkit, tray apps, compositor, wallpaper, dwmblocks)
 - Optional display-manager session setup (`lightdm`, `sddm`, `greetd`, `ly`)
+- Hypr-like rofi suite (RofiBeats, web search, calculator)
+- Optional DM theming preset (`hyprlike`) for SDDM/LightDM
 - Reproducible post-install deployment to new machines
 - `dwmblocks` package with clickable blocks
 
@@ -22,6 +24,8 @@ This repo turns a plain `dwm` source tree into a reproducible, distro-aware setu
 - `scripts/set-dwm-keybind-profile.sh`: set compile-time keybind profile
 - `scripts/dwm-autostart.sh`: session startup helper
 - `scripts/setup-dwmblocks.sh`: deploy `dwmblocks` config, optionally build/install dwmblocks
+- `scripts/setup-rofi-suite.sh`: deploy rofi scripts + rofi theme configs
+- `scripts/setup-display-manager-theme.sh`: apply `hyprlike` theme preset to SDDM/LightDM
 - `dwmblocks/`: block definitions + scripts
 - `profiles/`: runtime profile env and compile-time profile headers
 - `sessions/dwm.desktop`: display-manager session entry
@@ -31,18 +35,19 @@ This repo turns a plain `dwm` source tree into a reproducible, distro-aware setu
 Dry run first:
 
 ```bash
-./scripts/install-dwm-stack.sh --dry-run --display-manager lightdm --install-xinitrc --install-session --enable-services
+./scripts/install-dwm-stack.sh --dry-run --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services
 ```
 
 Install for real:
 
 ```bash
-./scripts/install-dwm-stack.sh --display-manager lightdm --install-xinitrc --install-session --enable-services
+./scripts/install-dwm-stack.sh --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services
 ```
 
 Notes:
 
 - `--display-manager` options: `lightdm|sddm|greetd|ly|none`
+- `--dm-theme` options: `none|hyprlike` (applies only for `sddm` or `lightdm`)
 - `--install-xinitrc` writes `~/.xinitrc`
 - `--install-session` installs `/usr/share/xsessions/dwm.desktop`
 - `--enable-services` enables `NetworkManager`, optional `bluetooth`, optional `tlp` (laptop), and selected DM
@@ -52,13 +57,13 @@ Notes:
 Use symlink mode for easy updates from this repo:
 
 ```bash
-./scripts/post-install.sh --mode symlink --force --install-session --rebuild-dwm
+./scripts/post-install.sh --mode symlink --force --install-session --setup-rofi --rebuild-dwm
 ```
 
 Use copy mode if you want standalone files in `$HOME`:
 
 ```bash
-./scripts/post-install.sh --mode copy --profile laptop --force --rebuild-dwm
+./scripts/post-install.sh --mode copy --profile laptop --force --setup-rofi --display-manager sddm --dm-theme hyprlike --rebuild-dwm
 ```
 
 ## 3) Start DWM
@@ -154,7 +159,35 @@ Deploy + build/install against a local `dwmblocks` source tree:
 - Updates: left open distro update command in terminal
 - Date: left popup calendar
 
-## 7) Keybind highlights
+## 7) Rofi suite (Hypr-style)
+
+Install/update rofi suite manually:
+
+```bash
+./scripts/setup-rofi-suite.sh --mode symlink --force
+```
+
+Installed tools:
+
+- `rofi-beats.sh`: local + YouTube music player menu
+- `rofi-search.sh`: web search launcher (`ROFI_SEARCH_ENGINE` env supported)
+- `rofi-calc.sh`: calculator launcher (`qalc` preferred, `python3` fallback)
+
+## 8) Display-manager theming
+
+Apply SDDM hyprlike theme:
+
+```bash
+./scripts/setup-display-manager-theme.sh --dm sddm --theme hyprlike
+```
+
+Apply LightDM hyprlike preset:
+
+```bash
+./scripts/setup-display-manager-theme.sh --dm lightdm --theme hyprlike
+```
+
+## 9) Keybind highlights
 
 Core:
 
@@ -164,8 +197,12 @@ Core:
 - `Super+B`: browser
 - `Super+C`: VS Code
 - `Super+D`: Discord
+- `Super+S`: rofi web search
+- `Super+Alt+C`: rofi calculator
+- `Super+Shift+M`: RofiBeats
 - `Super+Q`: lock session
 - `Ctrl+Alt+P`: power menu
+- `Super+Alt+N`: network settings
 - `Super+Shift+S`: area screenshot to clipboard
 - `Super+Print`: full screenshot to clipboard
 - `Super+1..9` / `Super+Shift+1..9`: view/move window to tag
@@ -182,7 +219,7 @@ Desktop profile extras:
 - `XF86Display`: open `arandr`
 - `Super+Ctrl+P`: toggle `picom`
 
-## 8) Updating this setup later
+## 10) Updating this setup later
 
 If you pull new repo changes:
 
@@ -191,7 +228,7 @@ git pull
 ./scripts/post-install.sh --mode symlink --force --rebuild-dwm
 ```
 
-## 9) Troubleshooting
+## 11) Troubleshooting
 
 - No DWM at login screen:
   - rerun with `--install-session`
@@ -203,4 +240,3 @@ git pull
   - ensure packages are installed by `install-dwm-stack.sh`
 - `dwmblocks` not updating on volume keys:
   - ensure `dwmblocks` is running and supports RTMIN signals
-

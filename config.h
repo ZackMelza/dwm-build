@@ -73,6 +73,9 @@ static const char *filemanager[] = { "nemo", NULL };
 static const char *code[] = { "code", NULL };
 static const char *discord[] = { "discord", NULL };
 static const char *rofi[] = { "rofi", "-show", "drun", "-modi", "drun,filebrowser,run,window", NULL };
+static const char *rofibeats[] = { "rofi-beats.sh", NULL };
+static const char *rofisearch[] = { "rofi-search.sh", NULL };
+static const char *roficalc[] = { "rofi-calc.sh", NULL };
 static const char *lockcmd[] = { "loginctl", "lock-session", NULL };
 static const char *netcfg[] = { "nm-connection-editor", NULL };
 static const char *screenshot[] = { "/bin/sh", "-c", "maim -s | xclip -selection clipboard -t image/png", NULL };
@@ -86,12 +89,15 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_c,      spawn,          {.v = code } },
 	{ MODKEY,                       XK_e,      spawn,          {.v = filemanager } },
 	{ MODKEY,                       XK_d,      spawn,          {.v = discord } },
+	{ MODKEY,                       XK_s,      spawn,          {.v = rofisearch } },
+	{ MODKEY|Mod1Mask,              XK_c,      spawn,          {.v = roficalc } },
+	{ MODKEY|ShiftMask,             XK_m,      spawn,          {.v = rofibeats } },
 	{ MODKEY|ShiftMask,             XK_s,      spawn,          {.v = screenshot } },
 	{ MODKEY,                       XK_Print,  spawn,          {.v = screenshot_full } },
 	{ MODKEY|ShiftMask,             XK_q,      killclient,     {0} },
 	{ MODKEY,                       XK_q,      spawn,          {.v = lockcmd } },
 	{ ControlMask|Mod1Mask,         XK_p,      spawn,          SHCMD("dwm-power-menu.sh") },
-	{ MODKEY|Mod1Mask,              XK_e,      spawn,          {.v = netcfg } },
+	{ MODKEY|Mod1Mask,              XK_n,      spawn,          {.v = netcfg } },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
