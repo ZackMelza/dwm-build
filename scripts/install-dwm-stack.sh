@@ -295,7 +295,7 @@ run_cmd "make -C '$repo_root'"
 run_cmd "$SUDO make -C '$repo_root' install"
 run_cmd "'$repo_root/scripts/set-dwm-profile.sh' --profile '$profile' --force"
 
-mkdir -p "$HOME/.local/bin"
+run_cmd "mkdir -p '$HOME/.local/bin'"
 run_cmd "install -m 755 '$repo_root/scripts/dwm-autostart.sh' '$HOME/.local/bin/dwm-autostart.sh'"
 run_cmd "install -m 755 '$repo_root/scripts/initial-boot.sh' '$HOME/.local/bin/initial-boot.sh'"
 run_cmd "install -m 755 '$repo_root/scripts/start-polkit-agent.sh' '$HOME/.local/bin/start-polkit-agent.sh'"

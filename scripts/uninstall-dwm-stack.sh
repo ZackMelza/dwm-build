@@ -72,6 +72,10 @@ if [[ -L "$HOME/.config/dwmblocks" ]]; then
   run_cmd "rm -f '$HOME/.config/dwmblocks'"
 fi
 
+if [[ -L "$HOME/.local/dwmblocks" ]]; then
+  run_cmd "rm -f '$HOME/.local/dwmblocks'"
+fi
+
 if [[ -L "$HOME/.config/kitty" ]]; then
   run_cmd "rm -f '$HOME/.config/kitty'"
 fi

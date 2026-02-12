@@ -102,7 +102,18 @@ dst_dir="$HOME/.config/dwmblocks"
 
 run_cmd "mkdir -p '$HOME/.config'"
 link_or_copy "$src_dir" "$dst_dir"
-run_cmd "chmod +x '$dst_dir/scripts/'*.sh"
+if [[ -d "$dst_dir/scripts" ]]; then
+  for script in "$dst_dir"/scripts/*.sh; do
+    [[ -e "$script" ]] || continue
+    run_cmd "chmod +x '$script'"
+  done
+fi
+
+# Backward-compat path for older helper scripts that referenced ~/.local/dwmblocks.
+run_cmd "mkdir -p '$HOME/.local'"
+if [[ ! -e "$HOME/.local/dwmblocks" ]]; then
+  run_cmd "ln -s '$dst_dir' '$HOME/.local/dwmblocks'"
+fi
 
 if [[ -n "$dwmblocks_src" ]]; then
   if [[ ! -d "$dwmblocks_src" ]]; then
