@@ -53,7 +53,12 @@ run_cmd() {
   fi
 }
 
-repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+script_path="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
+  [[ -n "$resolved" ]] && script_path="$resolved"
+fi
+repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
 profile_args=""
 if [[ -n "$profile" ]]; then

@@ -142,7 +142,12 @@ source /etc/os-release
 os_id="${ID:-unknown}"
 os_like="${ID_LIKE:-}"
 
-repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+script_path="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
+  [[ -n "$resolved" ]] && script_path="$resolved"
+fi
+repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
 common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
 common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst network-manager-gnome network-manager blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"

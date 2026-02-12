@@ -28,7 +28,12 @@ source_if_exists() {
 source_if_exists "$HOME/.config/environment.d/99-dwm.conf"
 source_if_exists "$HOME/.config/dwm/host.conf"
 
-script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+script_path="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
+  [[ -n "$resolved" ]] && script_path="$resolved"
+fi
+script_dir="$(cd -- "$(dirname -- "$script_path")" && pwd)"
 
 "$script_dir/initial-boot.sh" || true
 
