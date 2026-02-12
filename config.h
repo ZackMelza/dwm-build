@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#include <X11/XF86keysym.h>
 
 /* appearance */
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
@@ -29,7 +30,13 @@ static const Rule rules[] = {
 	 */
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           -1 },
+	{ "Pavucontrol", NULL,    NULL,       0,            1,           -1 },
+	{ "Nm-connection-editor", NULL, NULL, 0,            1,           -1 },
+	{ "Blueman-manager", NULL, NULL,      0,            1,           -1 },
+	{ "firefox",  NULL,       NULL,       1 << 1,       0,           -1 },
+	{ "brave-browser", NULL,  NULL,       1 << 1,       0,           -1 },
+	{ "Code",     NULL,       NULL,       1 << 2,       0,           -1 },
+	{ "discord",  NULL,       NULL,       1 << 7,       0,           -1 },
 };
 
 /* layout(s) */
@@ -55,6 +62,7 @@ static const Layout layouts[] = {
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
+#include "profiles/config-profile.h"
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
@@ -63,24 +71,36 @@ static const char *termcmd[]  = { "alacritty", NULL };
 static const char *browser[] = { "brave", NULL };
 static const char *filemanager[] = { "nemo", NULL };
 static const char *code[] = { "code", NULL };
+static const char *discord[] = { "discord", NULL };
+static const char *rofi[] = { "rofi", "-show", "drun", "-modi", "drun,filebrowser,run,window", NULL };
+static const char *lockcmd[] = { "loginctl", "lock-session", NULL };
+static const char *netcfg[] = { "nm-connection-editor", NULL };
+static const char *screenshot[] = { "/bin/sh", "-c", "maim -s | xclip -selection clipboard -t image/png", NULL };
+static const char *screenshot_full[] = { "/bin/sh", "-c", "maim | xclip -selection clipboard -t image/png", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_r,      spawn,          {.v = dmenucmd } },
+	{ MODKEY,                       XK_r,      spawn,          {.v = rofi } },
 	{ MODKEY,                       XK_b,      spawn,          {.v = browser } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_c,      spawn,          {.v = code } },
 	{ MODKEY,                       XK_e,      spawn,          {.v = filemanager } },
+	{ MODKEY,                       XK_d,      spawn,          {.v = discord } },
+	{ MODKEY|ShiftMask,             XK_s,      spawn,          {.v = screenshot } },
+	{ MODKEY,                       XK_Print,  spawn,          {.v = screenshot_full } },
+	{ MODKEY|ShiftMask,             XK_q,      killclient,     {0} },
+	{ MODKEY,                       XK_q,      spawn,          {.v = lockcmd } },
+	{ ControlMask|Mod1Mask,         XK_p,      spawn,          SHCMD("dwm-power-menu.sh") },
+	{ MODKEY|Mod1Mask,              XK_e,      spawn,          {.v = netcfg } },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
-	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
+	{ MODKEY|ShiftMask,             XK_i,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-	{ MODKEY,                       XK_Return, zoom,           {0} },
+	{ MODKEY|ShiftMask,             XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
@@ -92,6 +112,19 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+	{ MODKEY,                       XK_Left,   focusstack,     {.i = -1 } },
+	{ MODKEY,                       XK_Right,  focusstack,     {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_Left,   setmfact,       {.f = -0.05} },
+	{ MODKEY|ShiftMask,             XK_Right,  setmfact,       {.f = +0.05} },
+	{ 0,                            XF86XK_AudioRaiseVolume, spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ +5%; pkill -RTMIN+1 dwmblocks") },
+	{ 0,                            XF86XK_AudioLowerVolume, spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ -5%; pkill -RTMIN+1 dwmblocks") },
+	{ 0,                            XF86XK_AudioMute, spawn, SHCMD("pactl set-sink-mute @DEFAULT_SINK@ toggle; pkill -RTMIN+1 dwmblocks") },
+	{ 0,                            XF86XK_AudioMicMute, spawn, SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle; pkill -RTMIN+1 dwmblocks") },
+	{ 0,                            XF86XK_AudioPlay, spawn, SHCMD("playerctl play-pause") },
+	{ 0,                            XF86XK_AudioPause, spawn, SHCMD("playerctl play-pause") },
+	{ 0,                            XF86XK_AudioNext, spawn, SHCMD("playerctl next") },
+	{ 0,                            XF86XK_AudioPrev, spawn, SHCMD("playerctl previous") },
+	PROFILE_EXTRA_KEYS
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
@@ -101,7 +134,7 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ MODKEY|ControlMask|ShiftMask, XK_q,      quit,           {0} },
 };
 
 /* button definitions */
@@ -120,4 +153,3 @@ static const Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
-

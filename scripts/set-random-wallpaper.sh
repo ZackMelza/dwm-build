@@ -1,10 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-WALLPAPER_DIR="/usr/share/wallpapers"
+wallpaper_dir="${WALLPAPER_DIR:-$HOME/Pictures/wallpapers}"
 
-IMG=$( find "$WALLPAPER_DIR" -type f \( -iname '*.jpg' -o -iname '*.png' \) | shuf -n 1)
+if [[ ! -d "$wallpaper_dir" ]]; then
+  wallpaper_dir="/usr/share/wallpapers"
+fi
 
-feh --bg-scale "$IMG"
+if [[ ! -d "$wallpaper_dir" ]]; then
+  echo "No wallpaper directory found." >&2
+  exit 0
+fi
 
-echo "$(date): $IMG" >> ~/.feh-wallpaper-log
+img="$(find "$wallpaper_dir" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | shuf -n 1)"
 
+if [[ -z "$img" ]]; then
+  echo "No image files found in $wallpaper_dir" >&2
+  exit 0
+fi
+
+if command -v feh >/dev/null 2>&1; then
+  feh --bg-scale "$img"
+fi
+
+printf '%s: %s\n' "$(date '+%F %T')" "$img" >> "$HOME/.feh-wallpaper-log"

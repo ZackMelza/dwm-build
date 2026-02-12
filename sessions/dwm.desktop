@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=DWM
+Comment=Dynamic Window Manager
+Exec=dwm
+TryExec=dwm
+Type=Application
+DesktopNames=DWM

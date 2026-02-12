@@ -1,48 +1,206 @@
-dwm - dynamic window manager
-============================
-dwm is an extremely fast, small, and dynamic window manager for X.
+# DWM Build (Hyprland-style workflow)
 
+This repo turns a plain `dwm` source tree into a reproducible, distro-aware setup that behaves like your Hyprland workflow where possible, while staying lightweight for weaker hardware.
 
-Requirements
-------------
-In order to build dwm you need the Xlib header files.
+## What this gives you
 
+- Distro-aware install script (`arch`, `debian/ubuntu`, `fedora`, `opensuse` families)
+- Automatic laptop/desktop detection (or forced profile)
+- Runtime profile config (`~/.config/environment.d/99-dwm.conf` + `~/.config/dwm/host.conf`)
+- Compile-time keybind profile switching (laptop vs desktop)
+- DWM autostart service/bootstrap flow (polkit, tray apps, compositor, wallpaper, dwmblocks)
+- Optional display-manager session setup (`lightdm`, `sddm`, `greetd`, `ly`)
+- Reproducible post-install deployment to new machines
+- `dwmblocks` package with clickable blocks
 
-Installation
-------------
-Edit config.mk to match your local setup (dwm is installed into
-the /usr/local namespace by default).
+## Repo layout
 
-Afterwards enter the following command to build and install dwm (if
-necessary as root):
+- `scripts/install-dwm-stack.sh`: package install + build/install dwm + optional service/session setup
+- `scripts/post-install.sh`: deploy user config/scripts in symlink or copy mode
+- `scripts/rebuild-dwm-profile.sh`: apply profile, rebuild dwm, install dwm
+- `scripts/set-dwm-profile.sh`: set runtime profile (`laptop`/`desktop`)
+- `scripts/set-dwm-keybind-profile.sh`: set compile-time keybind profile
+- `scripts/dwm-autostart.sh`: session startup helper
+- `scripts/setup-dwmblocks.sh`: deploy `dwmblocks` config, optionally build/install dwmblocks
+- `dwmblocks/`: block definitions + scripts
+- `profiles/`: runtime profile env and compile-time profile headers
+- `sessions/dwm.desktop`: display-manager session entry
 
-    make clean install
+## 1) First-time install
 
+Dry run first:
 
-Running dwm
------------
-Add the following line to your .xinitrc to start dwm using startx:
+```bash
+./scripts/install-dwm-stack.sh --dry-run --display-manager lightdm --install-xinitrc --install-session --enable-services
+```
 
-    exec dwm
+Install for real:
 
-In order to connect dwm to a specific display, make sure that
-the DISPLAY environment variable is set correctly, e.g.:
+```bash
+./scripts/install-dwm-stack.sh --display-manager lightdm --install-xinitrc --install-session --enable-services
+```
 
-    DISPLAY=foo.bar:1 exec dwm
+Notes:
 
-(This will start dwm on display :1 of the host foo.bar.)
+- `--display-manager` options: `lightdm|sddm|greetd|ly|none`
+- `--install-xinitrc` writes `~/.xinitrc`
+- `--install-session` installs `/usr/share/xsessions/dwm.desktop`
+- `--enable-services` enables `NetworkManager`, optional `bluetooth`, optional `tlp` (laptop), and selected DM
 
-In order to display status info in the bar, you can do something
-like this in your .xinitrc:
+## 2) Post-install deployment (recommended)
 
-    while xsetroot -name "`date` `uptime | sed 's/.*,//'`"
-    do
-    	sleep 1
-    done &
-    exec dwm
+Use symlink mode for easy updates from this repo:
 
+```bash
+./scripts/post-install.sh --mode symlink --force --install-session --rebuild-dwm
+```
 
-Configuration
--------------
-The configuration of dwm is done by creating a custom config.h
-and (re)compiling the source code.
+Use copy mode if you want standalone files in `$HOME`:
+
+```bash
+./scripts/post-install.sh --mode copy --profile laptop --force --rebuild-dwm
+```
+
+## 3) Start DWM
+
+### With display manager
+
+At login screen, choose `DWM` session.
+
+### With startx
+
+If you used `--install-xinitrc`, run:
+
+```bash
+startx
+```
+
+## 4) Profile control
+
+Set runtime profile manually:
+
+```bash
+./scripts/set-dwm-profile.sh --profile laptop --force
+./scripts/set-dwm-profile.sh --profile desktop --force
+```
+
+Set compile-time keybind profile manually:
+
+```bash
+./scripts/set-dwm-keybind-profile.sh --profile laptop
+./scripts/set-dwm-keybind-profile.sh --profile desktop
+```
+
+Rebuild/install dwm for selected profile:
+
+```bash
+./scripts/rebuild-dwm-profile.sh --profile laptop
+./scripts/rebuild-dwm-profile.sh --profile desktop
+```
+
+## 5) DWM autostart behavior
+
+`scripts/dwm-autostart.sh` can start:
+
+- `dunst`
+- `picom`
+- `nm-applet`
+- `blueman-applet`
+- `pasystray`
+- `dwmblocks`
+- polkit agent
+- wallpaper script
+
+Per-profile toggles are in:
+
+- `profiles/laptop.conf`
+- `profiles/desktop.conf`
+
+Toggle variables:
+
+- `DWM_AUTOSTART_DUNST`
+- `DWM_AUTOSTART_PICOM`
+- `DWM_AUTOSTART_NM_APPLET`
+- `DWM_AUTOSTART_BLUEMAN`
+- `DWM_AUTOSTART_PASYSTRAY`
+- `DWM_AUTOSTART_DWMBLOCKS`
+
+## 6) dwmblocks setup
+
+Deploy config package:
+
+```bash
+./scripts/setup-dwmblocks.sh --mode symlink --force
+```
+
+Deploy + build/install against a local `dwmblocks` source tree:
+
+```bash
+./scripts/setup-dwmblocks.sh --mode symlink --dwmblocks-src ~/projects/dwmblocks --build --force
+```
+
+### Included blocks
+
+- Volume, Network, CPU, Memory, Disk, Battery, Updates, Date
+
+### Click actions
+
+- Volume: left mute, right `pavucontrol`, scroll adjust volume
+- Network: left `nm-connection-editor`, right `nmtui`
+- CPU: left terminal monitor (`btop`/`htop`/`top`), right `gnome-system-monitor`
+- Memory: left terminal memory detail
+- Disk: left terminal disk detail, right open `/` in file manager
+- Battery: left status popup, right cycle `powerprofilesctl` profile (if available)
+- Updates: left open distro update command in terminal
+- Date: left popup calendar
+
+## 7) Keybind highlights
+
+Core:
+
+- `Super+R`: rofi launcher
+- `Super+Return`: terminal
+- `Super+E`: file manager
+- `Super+B`: browser
+- `Super+C`: VS Code
+- `Super+D`: Discord
+- `Super+Q`: lock session
+- `Ctrl+Alt+P`: power menu
+- `Super+Shift+S`: area screenshot to clipboard
+- `Super+Print`: full screenshot to clipboard
+- `Super+1..9` / `Super+Shift+1..9`: view/move window to tag
+
+Laptop profile extras:
+
+- Brightness XF86 keys
+- Sleep key
+- Power key opens power menu
+- `Alt+Shift+Tab`: keyboard-layout reset helper
+
+Desktop profile extras:
+
+- `XF86Display`: open `arandr`
+- `Super+Ctrl+P`: toggle `picom`
+
+## 8) Updating this setup later
+
+If you pull new repo changes:
+
+```bash
+git pull
+./scripts/post-install.sh --mode symlink --force --rebuild-dwm
+```
+
+## 9) Troubleshooting
+
+- No DWM at login screen:
+  - rerun with `--install-session`
+  - verify `/usr/share/xsessions/dwm.desktop` exists
+- `startx` does not start DWM:
+  - ensure `~/.xinitrc` exists and is from this repo
+- Missing tray/services:
+  - check `profiles/*.conf` autostart toggles
+  - ensure packages are installed by `install-dwm-stack.sh`
+- `dwmblocks` not updating on volume keys:
+  - ensure `dwmblocks` is running and supports RTMIN signals
+
