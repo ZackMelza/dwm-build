@@ -1,9 +1,25 @@
-@import "config-rofi-beats.rasi"
+/* ---- 💫 https://github.com/JaKooLit 💫 ---- */
+/* Main Config Calculator */
+/* Submitted by: https://github.com/JosephArmas */
 
+@import "~/.config/rofi/config.rasi" 
+
+/* ---- Mainbox ---- */
+mainbox {
+  children: [ "entry", "message" ];
+  height: inherit;
+}
+
+/* ---- Window ---- */
 window {
-  width: 40%;
+  width: 30%;
+  height: inherit;
 }
 
-listview {
-  lines: 0;
+/* ---- Entry ---- */
+entry {
+  expand: true;
+  placeholder: " 🧮 Calculate";
 }
+
+listview {enable: false;}

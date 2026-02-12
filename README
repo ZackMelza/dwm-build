@@ -167,6 +167,9 @@ Install/update rofi suite manually:
 ./scripts/setup-rofi-suite.sh --mode symlink --force
 ```
 
+This deploys the full repo `rofi/` directory (including `themes/` and `wallust/`) to `~/.config/rofi`.
+With `--force`, existing `~/.config/rofi` is replaced.
+
 Installed tools:
 
 - `rofi-beats.sh`: local + YouTube music player menu

@@ -3,7 +3,7 @@ set -euo pipefail
 
 music_dir="${ROFI_BEATS_MUSIC_DIR:-$HOME/Music}"
 conf_dir="${ROFI_CONF_DIR:-$HOME/.config/rofi}"
-rofi_theme="$conf_dir/config-rofi-beats.rasi"
+rofi_theme="$conf_dir/config-rofi-Beats.rasi"
 mpv_socket="${XDG_RUNTIME_DIR:-/tmp}/rofibeats-mpv.sock"
 
 notify_msg() {

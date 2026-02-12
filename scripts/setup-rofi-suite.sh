@@ -5,7 +5,7 @@ usage() {
   cat <<'USAGE'
 Usage: setup-rofi-suite.sh [--mode symlink|copy] [--force] [--dry-run]
 
-Installs Hypr-like rofi scripts and themes for DWM.
+Installs the full Hypr-like rofi suite for DWM.
 USAGE
 }
 
@@ -69,15 +69,13 @@ link_or_copy() {
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
-run_cmd "mkdir -p '$HOME/.local/bin' '$HOME/.config/rofi'"
+run_cmd "mkdir -p '$HOME/.local/bin' '$HOME/.config'"
 
 for s in rofi-beats.sh rofi-search.sh rofi-calc.sh; do
   link_or_copy "$repo_root/scripts/rofi/$s" "$HOME/.local/bin/$s"
   run_cmd "chmod +x '$HOME/.local/bin/$s'"
 done
 
-for c in config-rofi-beats.rasi config-search.rasi config-calc.rasi; do
-  link_or_copy "$repo_root/rofi/$c" "$HOME/.config/rofi/$c"
-done
+link_or_copy "$repo_root/rofi" "$HOME/.config/rofi" 1
 
-echo "Rofi suite installed."
+echo "Rofi suite installed (full config + themes)."
