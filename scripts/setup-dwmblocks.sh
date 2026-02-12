@@ -80,6 +80,8 @@ link_or_copy() {
   local src="$1"
   local dst="$2"
 
+  run_cmd "mkdir -p '$(dirname "$dst")'"
+
   if [[ -e "$dst" || -L "$dst" ]]; then
     if [[ $force -eq 1 ]]; then
       run_cmd "rm -rf '$dst'"
