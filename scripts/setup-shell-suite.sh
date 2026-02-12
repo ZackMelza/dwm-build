@@ -59,6 +59,11 @@ run_cmd() {
 link_or_copy() {
   local src="$1" dst="$2" is_dir="${3:-0}"
 
+  if [[ ! -e "$src" && ! -L "$src" ]]; then
+    echo "Missing source path: $src" >&2
+    exit 1
+  fi
+
   run_cmd "mkdir -p '$(dirname "$dst")'"
 
   if [[ -e "$dst" || -L "$dst" ]]; then

@@ -301,29 +301,41 @@ run_cmd "$SUDO make -C '$repo_root' install"
 run_cmd "'$repo_root/scripts/set-dwm-profile.sh' --profile '$profile' --force"
 
 run_cmd "mkdir -p '$HOME/.local/bin'"
-run_cmd "install -m 755 '$repo_root/scripts/dwm-autostart.sh' '$HOME/.local/bin/dwm-autostart.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/initial-boot.sh' '$HOME/.local/bin/initial-boot.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/start-polkit-agent.sh' '$HOME/.local/bin/start-polkit-agent.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/set-random-wallpaper.sh' '$HOME/.local/bin/set-random-wallpaper.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/set-dwm-profile.sh' '$HOME/.local/bin/set-dwm-profile.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/set-dwm-keybind-profile.sh' '$HOME/.local/bin/set-dwm-keybind-profile.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/rebuild-dwm-profile.sh' '$HOME/.local/bin/rebuild-dwm-profile.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/dwm-power-menu.sh' '$HOME/.local/bin/dwm-power-menu.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/post-install.sh' '$HOME/.local/bin/post-install.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/setup-dwmblocks.sh' '$HOME/.local/bin/setup-dwmblocks.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/setup-rofi-suite.sh' '$HOME/.local/bin/setup-rofi-suite.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/setup-shell-suite.sh' '$HOME/.local/bin/setup-shell-suite.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-beats.sh' '$HOME/.local/bin/rofi-beats.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-search.sh' '$HOME/.local/bin/rofi-search.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-calc.sh' '$HOME/.local/bin/rofi-calc.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-zsh-theme.sh' '$HOME/.local/bin/rofi-zsh-theme.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-kitty-theme.sh' '$HOME/.local/bin/rofi-kitty-theme.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/setup-display-manager-theme.sh' '$HOME/.local/bin/setup-display-manager-theme.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/bootstrap.sh' '$HOME/.local/bin/dwm-bootstrap.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/health-check.sh' '$HOME/.local/bin/dwm-health-check.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/uninstall-dwm-stack.sh' '$HOME/.local/bin/dwm-uninstall.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/generate-keybind-cheatsheet.sh' '$HOME/.local/bin/generate-keybind-cheatsheet.sh'"
-run_cmd "install -m 755 '$repo_root/scripts/show-keybinds.sh' '$HOME/.local/bin/show-keybinds.sh'"
+
+install_to_user_bin() {
+  local src="$1"
+  local dst="$2"
+  if [[ ! -e "$src" && ! -L "$src" ]]; then
+    echo "Missing source path: $src" >&2
+    exit 1
+  fi
+  run_cmd "mkdir -p '$(dirname "$dst")'"
+  run_cmd "install -m 755 '$src' '$dst'"
+}
+
+install_to_user_bin "$repo_root/scripts/dwm-autostart.sh" "$HOME/.local/bin/dwm-autostart.sh"
+install_to_user_bin "$repo_root/scripts/initial-boot.sh" "$HOME/.local/bin/initial-boot.sh"
+install_to_user_bin "$repo_root/scripts/start-polkit-agent.sh" "$HOME/.local/bin/start-polkit-agent.sh"
+install_to_user_bin "$repo_root/scripts/set-random-wallpaper.sh" "$HOME/.local/bin/set-random-wallpaper.sh"
+install_to_user_bin "$repo_root/scripts/set-dwm-profile.sh" "$HOME/.local/bin/set-dwm-profile.sh"
+install_to_user_bin "$repo_root/scripts/set-dwm-keybind-profile.sh" "$HOME/.local/bin/set-dwm-keybind-profile.sh"
+install_to_user_bin "$repo_root/scripts/rebuild-dwm-profile.sh" "$HOME/.local/bin/rebuild-dwm-profile.sh"
+install_to_user_bin "$repo_root/scripts/dwm-power-menu.sh" "$HOME/.local/bin/dwm-power-menu.sh"
+install_to_user_bin "$repo_root/scripts/post-install.sh" "$HOME/.local/bin/post-install.sh"
+install_to_user_bin "$repo_root/scripts/setup-dwmblocks.sh" "$HOME/.local/bin/setup-dwmblocks.sh"
+install_to_user_bin "$repo_root/scripts/setup-rofi-suite.sh" "$HOME/.local/bin/setup-rofi-suite.sh"
+install_to_user_bin "$repo_root/scripts/setup-shell-suite.sh" "$HOME/.local/bin/setup-shell-suite.sh"
+install_to_user_bin "$repo_root/scripts/rofi/rofi-beats.sh" "$HOME/.local/bin/rofi-beats.sh"
+install_to_user_bin "$repo_root/scripts/rofi/rofi-search.sh" "$HOME/.local/bin/rofi-search.sh"
+install_to_user_bin "$repo_root/scripts/rofi/rofi-calc.sh" "$HOME/.local/bin/rofi-calc.sh"
+install_to_user_bin "$repo_root/scripts/rofi/rofi-zsh-theme.sh" "$HOME/.local/bin/rofi-zsh-theme.sh"
+install_to_user_bin "$repo_root/scripts/rofi/rofi-kitty-theme.sh" "$HOME/.local/bin/rofi-kitty-theme.sh"
+install_to_user_bin "$repo_root/scripts/setup-display-manager-theme.sh" "$HOME/.local/bin/setup-display-manager-theme.sh"
+install_to_user_bin "$repo_root/scripts/bootstrap.sh" "$HOME/.local/bin/dwm-bootstrap.sh"
+install_to_user_bin "$repo_root/scripts/health-check.sh" "$HOME/.local/bin/dwm-health-check.sh"
+install_to_user_bin "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bin/dwm-uninstall.sh"
+install_to_user_bin "$repo_root/scripts/generate-keybind-cheatsheet.sh" "$HOME/.local/bin/generate-keybind-cheatsheet.sh"
+install_to_user_bin "$repo_root/scripts/show-keybinds.sh" "$HOME/.local/bin/show-keybinds.sh"
 run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force"
 if [[ $backup -eq 1 ]]; then
   run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force --backup"
@@ -337,6 +349,10 @@ else
 fi
 
 if [[ $install_xinitrc -eq 1 ]]; then
+  if [[ ! -f "$repo_root/xinitrc" ]]; then
+    echo "Missing source path: $repo_root/xinitrc" >&2
+    exit 1
+  fi
   if [[ -f "$HOME/.xinitrc" ]]; then
     run_cmd "cp '$HOME/.xinitrc' '$HOME/.xinitrc.bak.$(date +%Y%m%d%H%M%S)'"
   fi
@@ -344,6 +360,10 @@ if [[ $install_xinitrc -eq 1 ]]; then
 fi
 
 if [[ $install_session -eq 1 ]]; then
+  if [[ ! -f "$repo_root/sessions/dwm.desktop" ]]; then
+    echo "Missing source path: $repo_root/sessions/dwm.desktop" >&2
+    exit 1
+  fi
   run_cmd "$SUDO install -Dm644 '$repo_root/sessions/dwm.desktop' /usr/share/xsessions/dwm.desktop"
 fi
 

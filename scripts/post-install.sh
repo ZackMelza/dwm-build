@@ -120,6 +120,11 @@ link_or_copy() {
   local src="$1"
   local dst="$2"
 
+  if [[ ! -e "$src" && ! -L "$src" ]]; then
+    echo "Missing source path: $src" >&2
+    exit 1
+  fi
+
   run_cmd "mkdir -p '$(dirname "$dst")'"
 
   if [[ -e "$dst" || -L "$dst" ]]; then
@@ -230,6 +235,10 @@ if [[ $rebuild_dwm -eq 1 ]]; then
 fi
 
 if [[ $install_session -eq 1 ]]; then
+  if [[ ! -f "$repo_root/sessions/dwm.desktop" ]]; then
+    echo "Missing source path: $repo_root/sessions/dwm.desktop" >&2
+    exit 1
+  fi
   if [[ $dry_run -eq 1 ]]; then
     run_cmd "sudo install -Dm644 '$repo_root/sessions/dwm.desktop' /usr/share/xsessions/dwm.desktop"
   else

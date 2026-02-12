@@ -83,11 +83,21 @@ if command -v readlink >/dev/null 2>&1; then
 fi
 repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
+require_path() {
+  local path="$1"
+  if [[ ! -e "$path" && ! -L "$path" ]]; then
+    echo "Missing source path: $path" >&2
+    exit 1
+  fi
+}
+
 if [[ "$dm" == "sddm" ]]; then
   theme_src="$repo_root/themes/sddm/dwm-hyprlike"
   theme_dst="/usr/share/sddm/themes/dwm-hyprlike"
   conf_dir="/etc/sddm.conf.d"
   conf_file="$conf_dir/10-dwm-hyprlike-theme.conf"
+
+  require_path "$theme_src"
 
   run_cmd "$SUDO install -d '$theme_dst'"
   if [[ $backup -eq 1 ]]; then

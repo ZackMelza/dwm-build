@@ -80,6 +80,11 @@ link_or_copy() {
   local src="$1"
   local dst="$2"
 
+  if [[ ! -e "$src" && ! -L "$src" ]]; then
+    echo "Missing source path: $src" >&2
+    exit 1
+  fi
+
   run_cmd "mkdir -p '$(dirname "$dst")'"
 
   if [[ -e "$dst" || -L "$dst" ]]; then
@@ -118,6 +123,10 @@ fi
 
 # Backward-compat path for older helper scripts that referenced ~/.local/dwmblocks.
 run_cmd "mkdir -p '$HOME/.local'"
+if [[ ! -e "$dst_dir" && ! -L "$dst_dir" ]]; then
+  echo "Expected dwmblocks target missing: $dst_dir" >&2
+  exit 1
+fi
 if [[ ! -e "$HOME/.local/dwmblocks" ]]; then
   run_cmd "ln -s '$dst_dir' '$HOME/.local/dwmblocks'"
 fi
