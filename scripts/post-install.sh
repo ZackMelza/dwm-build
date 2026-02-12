@@ -15,6 +15,7 @@ Options:
   --dm-theme hyprlike       Apply login theme to selected --display-manager
   --display-manager NAME    For --dm-theme: lightdm|sddm
   --rebuild-dwm             Rebuild/install dwm after profile deployment
+  --backup                  Backup target files before overwrite where supported
   --force                   Overwrite existing files/links
   --dry-run                 Print changes without writing
   -h, --help                Show this help
@@ -28,6 +29,7 @@ setup_rofi=0
 dm_theme="none"
 display_manager="none"
 rebuild_dwm=0
+backup=0
 force=0
 dry_run=0
 
@@ -59,6 +61,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --rebuild-dwm)
       rebuild_dwm=1
+      shift
+      ;;
+    --backup)
+      backup=1
       shift
       ;;
     --force)
@@ -110,7 +116,11 @@ link_or_copy() {
 
   if [[ -e "$dst" || -L "$dst" ]]; then
     if [[ $force -eq 1 ]]; then
-      run_cmd "rm -rf '$dst'"
+      if [[ $backup -eq 1 ]]; then
+        run_cmd "mv '$dst' '${dst}.bak.$(date +%Y%m%d%H%M%S)'"
+      else
+        run_cmd "rm -rf '$dst'"
+      fi
     else
       echo "Skipping existing path (use --force): $dst"
       return 0
@@ -141,6 +151,11 @@ scripts=(
   setup-dwmblocks.sh
   setup-rofi-suite.sh
   setup-display-manager-theme.sh
+  health-check.sh
+  uninstall-dwm-stack.sh
+  generate-keybind-cheatsheet.sh
+  show-keybinds.sh
+  bootstrap.sh
 )
 
 for script in "${scripts[@]}"; do
@@ -161,7 +176,11 @@ run_cmd "'$HOME/.local/bin/set-dwm-keybind-profile.sh' ${profile:+--profile '$pr
 run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode '$mode' --force"
 
 if [[ $setup_rofi -eq 1 ]]; then
-  run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force"
+  if [[ $backup -eq 1 ]]; then
+    run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force --backup"
+  else
+    run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force"
+  fi
 fi
 
 if [[ "$dm_theme" != "none" ]]; then
@@ -169,7 +188,11 @@ if [[ "$dm_theme" != "none" ]]; then
     echo "--dm-theme requires --display-manager lightdm|sddm" >&2
     exit 1
   fi
-  run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+  if [[ $backup -eq 1 ]]; then
+    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
+  else
+    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+  fi
 fi
 
 if [[ $rebuild_dwm -eq 1 ]]; then

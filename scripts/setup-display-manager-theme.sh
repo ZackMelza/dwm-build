@@ -10,12 +10,14 @@ Apply login-manager theming.
 Options:
   --dm sddm|lightdm      Target DM (required)
   --theme hyprlike       Theme preset (default: hyprlike)
+  --backup               Backup existing DM config/theme before overwrite
   --dry-run              Print actions only
 USAGE
 }
 
 dm=""
 theme="hyprlike"
+backup=0
 dry_run=0
 
 while [[ $# -gt 0 ]]; do
@@ -30,6 +32,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       dry_run=1
+      shift
+      ;;
+    --backup)
+      backup=1
       shift
       ;;
     -h|--help)
@@ -79,8 +85,15 @@ if [[ "$dm" == "sddm" ]]; then
   conf_file="$conf_dir/10-dwm-hyprlike-theme.conf"
 
   run_cmd "$SUDO install -d '$theme_dst'"
+  if [[ $backup -eq 1 ]]; then
+    run_cmd "$SUDO test ! -e '$theme_dst' || $SUDO mv '$theme_dst' '${theme_dst}.bak.$(date +%Y%m%d%H%M%S)'"
+    run_cmd "$SUDO install -d '$theme_dst'"
+  fi
   run_cmd "$SUDO cp -r '$theme_src/'* '$theme_dst/'"
   run_cmd "$SUDO install -d '$conf_dir'"
+  if [[ $backup -eq 1 ]]; then
+    run_cmd "$SUDO test ! -e '$conf_file' || $SUDO cp '$conf_file' '${conf_file}.bak.$(date +%Y%m%d%H%M%S)'"
+  fi
 
   if [[ $dry_run -eq 1 ]]; then
     echo "[dry-run] write $conf_file"
@@ -100,6 +113,9 @@ fi
 conf_dir="/etc/lightdm/lightdm-gtk-greeter.conf.d"
 conf_file="$conf_dir/10-dwm-hyprlike.conf"
 run_cmd "$SUDO install -d '$conf_dir'"
+if [[ $backup -eq 1 ]]; then
+  run_cmd "$SUDO test ! -e '$conf_file' || $SUDO cp '$conf_file' '${conf_file}.bak.$(date +%Y%m%d%H%M%S)'"
+fi
 
 if [[ $dry_run -eq 1 ]]; then
   echo "[dry-run] write $conf_file"

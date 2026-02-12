@@ -4,6 +4,7 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage: setup-rofi-suite.sh [--mode symlink|copy] [--force] [--dry-run]
+       setup-rofi-suite.sh [--backup]
 
 Installs the full Hypr-like rofi suite for DWM.
 USAGE
@@ -11,6 +12,7 @@ USAGE
 
 mode="symlink"
 force=0
+backup=0
 dry_run=0
 
 while [[ $# -gt 0 ]]; do
@@ -21,6 +23,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --force)
       force=1
+      shift
+      ;;
+    --backup)
+      backup=1
       shift
       ;;
     --dry-run)
@@ -50,7 +56,11 @@ link_or_copy() {
   local src="$1" dst="$2" is_dir="${3:-0}"
   if [[ -e "$dst" || -L "$dst" ]]; then
     if [[ $force -eq 1 ]]; then
+      if [[ $backup -eq 1 ]]; then
+        run_cmd "mv '$dst' '${dst}.bak.$(date +%Y%m%d%H%M%S)'"
+      else
       run_cmd "rm -rf '$dst'"
+      fi
     else
       return
     fi

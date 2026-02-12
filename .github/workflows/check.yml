@@ -1,0 +1,26 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  shell-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Bash syntax
+        run: |
+          bash -n scripts/*.sh
+          bash -n scripts/rofi/*.sh
+          bash -n dwmblocks/scripts/*.sh
+
+      - name: Shellcheck
+        run: |
+          shellcheck scripts/*.sh
+          shellcheck scripts/rofi/*.sh
+          shellcheck dwmblocks/scripts/*.sh

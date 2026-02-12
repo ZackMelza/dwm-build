@@ -11,6 +11,7 @@ Options:
   --profile laptop|desktop    Force machine profile (default: auto detect)
   --display-manager NAME      Set login manager: lightdm|sddm|greetd|ly|none
   --dm-theme NAME             Login theme: none|hyprlike (for sddm/lightdm)
+  --backup                    Backup files before overwrite where supported
   --enable-services           Enable common services (NetworkManager, bluetooth, display manager)
   --install-xinitrc           Install repo xinitrc to ~/.xinitrc
   --install-session           Install sessions/dwm.desktop into /usr/share/xsessions (sudo required)
@@ -22,6 +23,7 @@ USAGE
 profile=""
 display_manager="none"
 dm_theme="none"
+backup=0
 enable_services=0
 install_xinitrc=0
 install_session=0
@@ -40,6 +42,10 @@ while [[ $# -gt 0 ]]; do
     --dm-theme)
       dm_theme="${2:-}"
       shift 2
+      ;;
+    --backup)
+      backup=1
+      shift
       ;;
     --enable-services)
       enable_services=1
@@ -139,9 +145,9 @@ os_like="${ID_LIKE:-}"
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom dmenu alacritty rofi dunst network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools alacritty rofi dunst network-manager-gnome blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools alacritty rofi dunst network-manager-gnome network-manager blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom dmenu alacritty rofi dunst NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
 
 laptop_pkgs_arch="tlp tlp-rdw"
 laptop_pkgs_debian="tlp"
@@ -305,8 +311,17 @@ run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-beats.sh' '$HOME/.local/bi
 run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-search.sh' '$HOME/.local/bin/rofi-search.sh'"
 run_cmd "install -m 755 '$repo_root/scripts/rofi/rofi-calc.sh' '$HOME/.local/bin/rofi-calc.sh'"
 run_cmd "install -m 755 '$repo_root/scripts/setup-display-manager-theme.sh' '$HOME/.local/bin/setup-display-manager-theme.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/bootstrap.sh' '$HOME/.local/bin/dwm-bootstrap.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/health-check.sh' '$HOME/.local/bin/dwm-health-check.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/uninstall-dwm-stack.sh' '$HOME/.local/bin/dwm-uninstall.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/generate-keybind-cheatsheet.sh' '$HOME/.local/bin/generate-keybind-cheatsheet.sh'"
+run_cmd "install -m 755 '$repo_root/scripts/show-keybinds.sh' '$HOME/.local/bin/show-keybinds.sh'"
 run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force"
-run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force"
+if [[ $backup -eq 1 ]]; then
+  run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force --backup"
+else
+  run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force"
+fi
 
 if [[ $install_xinitrc -eq 1 ]]; then
   if [[ -f "$HOME/.xinitrc" ]]; then
@@ -322,8 +337,61 @@ fi
 install_display_manager
 
 if [[ "$dm_theme" != "none" && ( "$display_manager" == "sddm" || "$display_manager" == "lightdm" ) ]]; then
-  run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+  if [[ $backup -eq 1 ]]; then
+    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
+  else
+    run_cmd "'$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+  fi
 fi
+
+install_optional_pkg() {
+  local cmd_name="$1"
+  local arch_pkg="$2"
+  local deb_pkg="$3"
+  local fed_pkg="$4"
+  local suse_pkg="$5"
+  local pkg_candidates=""
+
+  if command -v "$cmd_name" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  case "$pkg_family" in
+    arch) pkg_candidates="$arch_pkg" ;;
+    debian) pkg_candidates="$deb_pkg" ;;
+    fedora) pkg_candidates="$fed_pkg" ;;
+    opensuse) pkg_candidates="$suse_pkg" ;;
+  esac
+
+  IFS='|' read -r -a candidates <<< "$pkg_candidates"
+  for pkg in "${candidates[@]}"; do
+    if [[ -z "$pkg" ]]; then
+      continue
+    fi
+    if [[ $dry_run -eq 1 ]]; then
+      case "$pkg_family" in
+        arch) run_cmd "$SUDO pacman -S --needed --noconfirm $pkg" ;;
+        debian) run_cmd "$SUDO apt install -y $pkg" ;;
+        fedora) run_cmd "$SUDO dnf install -y $pkg" ;;
+        opensuse) run_cmd "$SUDO zypper --non-interactive install --no-recommends $pkg" ;;
+      esac
+      return 0
+    fi
+
+    case "$pkg_family" in
+      arch) $SUDO pacman -S --needed --noconfirm "$pkg" >/dev/null 2>&1 && return 0 ;;
+      debian) $SUDO apt install -y "$pkg" >/dev/null 2>&1 && return 0 ;;
+      fedora) $SUDO dnf install -y "$pkg" >/dev/null 2>&1 && return 0 ;;
+      opensuse) $SUDO zypper --non-interactive install --no-recommends "$pkg" >/dev/null 2>&1 && return 0 ;;
+    esac
+  done
+
+  echo "Optional package fallback failed for '$cmd_name'." >&2
+}
+
+install_optional_pkg qalc "qalculate-gtk|qalculate-qt" "qalc|qalculate-gtk" "qalculate-gtk|qalculate-qt" "qalculate|qalculate-qt"
+install_optional_pkg nmtui "networkmanager|network-manager-applet" "network-manager" "NetworkManager-tui|NetworkManager" "NetworkManager-tui|NetworkManager"
+install_optional_pkg arandr "arandr" "arandr" "arandr" "arandr"
 
 if [[ $enable_services -eq 1 ]]; then
   enable_service NetworkManager

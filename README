@@ -1,245 +1,192 @@
-# DWM Build (Hyprland-style workflow)
+# DWM Build
 
-This repo turns a plain `dwm` source tree into a reproducible, distro-aware setup that behaves like your Hyprland workflow where possible, while staying lightweight for weaker hardware.
+This repo gives you a portable, profile-aware DWM setup with:
 
-## What this gives you
+- distro-aware package installation
+- laptop/desktop detection
+- profile-based DWM build + runtime config
+- Hypr-like rofi tooling (RofiBeats/search/calc)
+- optional SDDM/LightDM theming
+- dwmblocks package + scripts
+- bootstrap, health-check, and uninstall helpers
 
-- Distro-aware install script (`arch`, `debian/ubuntu`, `fedora`, `opensuse` families)
-- Automatic laptop/desktop detection (or forced profile)
-- Runtime profile config (`~/.config/environment.d/99-dwm.conf` + `~/.config/dwm/host.conf`)
-- Compile-time keybind profile switching (laptop vs desktop)
-- DWM autostart service/bootstrap flow (polkit, tray apps, compositor, wallpaper, dwmblocks)
-- Optional display-manager session setup (`lightdm`, `sddm`, `greetd`, `ly`)
-- Hypr-like rofi suite (RofiBeats, web search, calculator)
-- Optional DM theming preset (`hyprlike`) for SDDM/LightDM
-- Reproducible post-install deployment to new machines
-- `dwmblocks` package with clickable blocks
+## Fast Start (Recommended)
 
-## Repo layout
-
-- `scripts/install-dwm-stack.sh`: package install + build/install dwm + optional service/session setup
-- `scripts/post-install.sh`: deploy user config/scripts in symlink or copy mode
-- `scripts/rebuild-dwm-profile.sh`: apply profile, rebuild dwm, install dwm
-- `scripts/set-dwm-profile.sh`: set runtime profile (`laptop`/`desktop`)
-- `scripts/set-dwm-keybind-profile.sh`: set compile-time keybind profile
-- `scripts/dwm-autostart.sh`: session startup helper
-- `scripts/setup-dwmblocks.sh`: deploy `dwmblocks` config, optionally build/install dwmblocks
-- `scripts/setup-rofi-suite.sh`: deploy rofi scripts + rofi theme configs
-- `scripts/setup-display-manager-theme.sh`: apply `hyprlike` theme preset to SDDM/LightDM
-- `dwmblocks/`: block definitions + scripts
-- `profiles/`: runtime profile env and compile-time profile headers
-- `sessions/dwm.desktop`: display-manager session entry
-
-## 1) First-time install
-
-Dry run first:
+Run one command on a fresh system:
 
 ```bash
-./scripts/install-dwm-stack.sh --dry-run --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services
+./scripts/bootstrap.sh --display-manager sddm --dm-theme hyprlike --mode symlink
 ```
 
-Install for real:
+What this does:
+
+1. Installs packages and builds/installs DWM.
+2. Deploys user config/scripts.
+3. Sets profile and rebuilds DWM for that profile.
+4. Installs rofi suite and (optionally) DM theme.
+
+## Manual Setup (Step by Step)
+
+### 1) Install packages + DWM
 
 ```bash
-./scripts/install-dwm-stack.sh --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services
+./scripts/install-dwm-stack.sh --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services --backup
 ```
 
-Notes:
-
-- `--display-manager` options: `lightdm|sddm|greetd|ly|none`
-- `--dm-theme` options: `none|hyprlike` (applies only for `sddm` or `lightdm`)
-- `--install-xinitrc` writes `~/.xinitrc`
-- `--install-session` installs `/usr/share/xsessions/dwm.desktop`
-- `--enable-services` enables `NetworkManager`, optional `bluetooth`, optional `tlp` (laptop), and selected DM
-
-## 2) Post-install deployment (recommended)
-
-Use symlink mode for easy updates from this repo:
+### 2) Deploy user config and extras
 
 ```bash
-./scripts/post-install.sh --mode symlink --force --install-session --setup-rofi --rebuild-dwm
+./scripts/post-install.sh --mode symlink --force --setup-rofi --display-manager sddm --dm-theme hyprlike --rebuild-dwm --backup
 ```
 
-Use copy mode if you want standalone files in `$HOME`:
+## Start DWM
+
+- With display manager: choose `DWM` at login.
+- With `startx`: run `startx` (after installing `~/.xinitrc`).
+
+## Keybind Highlights
+
+- `Super+H`: keybind cheat-sheet
+- `Super+R`: rofi launcher
+- `Super+S`: rofi web search
+- `Super+Alt+C`: rofi calc
+- `Super+Shift+M`: RofiBeats
+- `Super+Q`: close/kill focused app
+- `Ctrl+Alt+L`: lock session
+- `Super+Shift+S`: screenshot area
+- `Super+Print`: full screenshot
+
+## Script Reference
+
+### `scripts/bootstrap.sh`
+One-shot installer for fresh systems.
+
+Options:
+
+- `--profile laptop|desktop`: force machine profile
+- `--display-manager lightdm|sddm|greetd|ly|none`: login manager to set up
+- `--dm-theme none|hyprlike`: apply DM theme preset
+- `--mode symlink|copy`: deployment mode for post-install files
+- `--enable-services`: enable NetworkManager/bluetooth/tlp/DM when available
+- `--dry-run`: print actions without applying changes
+
+### `scripts/install-dwm-stack.sh`
+Installs dependencies, builds DWM, installs helper scripts.
+
+Options:
+
+- `--profile laptop|desktop`: force profile (default is auto-detect)
+- `--display-manager NAME`: `lightdm|sddm|greetd|ly|none`
+- `--dm-theme NAME`: `none|hyprlike` (used for `sddm`/`lightdm`)
+- `--backup`: keep timestamped backups before overwrite where supported
+- `--enable-services`: enable core services
+- `--install-xinitrc`: install repo `xinitrc` to `~/.xinitrc`
+- `--install-session`: install `sessions/dwm.desktop` to `/usr/share/xsessions`
+- `--dry-run`: print commands only
+- `-h, --help`: show help
+
+### `scripts/post-install.sh`
+Deploys user-level files, profile config, optional rofi/theme, optional rebuild.
+
+Options:
+
+- `--mode symlink|copy`: symlink from repo, or copy files into home
+- `--profile laptop|desktop`: force profile while configuring
+- `--install-session`: install X session desktop entry
+- `--setup-rofi`: install rofi suite
+- `--display-manager NAME`: `lightdm|sddm` (required if using `--dm-theme`)
+- `--dm-theme hyprlike`: apply DM theme
+- `--rebuild-dwm`: rebuild/install DWM after deployment
+- `--backup`: backup target files before overwrite
+- `--force`: overwrite existing files/links
+- `--dry-run`: print actions only
+- `-h, --help`: show help
+
+### `scripts/rebuild-dwm-profile.sh`
+Applies profile + keybind profile, rebuilds DWM, installs DWM.
+
+Options:
+
+- `--profile laptop|desktop`: force profile
+- `--dry-run`: print actions only
+- `--no-install`: build only, skip `make install`
+- `-h, --help`: show help
+
+### `scripts/setup-rofi-suite.sh`
+Installs the full `rofi/` directory and rofi helper scripts.
+
+Options:
+
+- `--mode symlink|copy`: deploy by symlink or copy
+- `--force`: replace existing files
+- `--backup`: move existing targets to timestamped backup before replace
+- `--dry-run`: print actions only
+
+### `scripts/setup-display-manager-theme.sh`
+Applies login screen theme config.
+
+Options:
+
+- `--dm sddm|lightdm`: target display manager
+- `--theme hyprlike`: theme preset
+- `--backup`: backup old DM config/theme before overwrite
+- `--dry-run`: print actions only
+
+### `scripts/setup-dwmblocks.sh`
+Deploys `dwmblocks` config package; can also build/install dwmblocks.
+
+Options:
+
+- `--mode symlink|copy`: deploy mode
+- `--dwmblocks-src PATH`: local dwmblocks source tree path
+- `--build`: build/install dwmblocks in that source tree
+- `--force`: overwrite existing targets
+- `--dry-run`: print actions only
+- `-h, --help`: show help
+
+### `scripts/health-check.sh`
+Verifies required commands/files and reports missing parts.
+
+Usage:
 
 ```bash
-./scripts/post-install.sh --mode copy --profile laptop --force --setup-rofi --display-manager sddm --dm-theme hyprlike --rebuild-dwm
+./scripts/health-check.sh
 ```
 
-## 3) Start DWM
+### `scripts/uninstall-dwm-stack.sh`
+Removes deployed user-side stack and optional DM/session changes.
 
-### With display manager
+Options:
 
-At login screen, choose `DWM` session.
+- `--restore-backups`: restore latest backup copies where present
+- `--remove-session`: remove `/usr/share/xsessions/dwm.desktop`
+- `--dm sddm|lightdm|none`: remove DM theme config for selected DM
+- `--dry-run`: print actions only
 
-### With startx
-
-If you used `--install-xinitrc`, run:
-
-```bash
-startx
-```
-
-## 4) Profile control
-
-Set runtime profile manually:
+## Profile Commands
 
 ```bash
 ./scripts/set-dwm-profile.sh --profile laptop --force
-./scripts/set-dwm-profile.sh --profile desktop --force
-```
-
-Set compile-time keybind profile manually:
-
-```bash
 ./scripts/set-dwm-keybind-profile.sh --profile laptop
-./scripts/set-dwm-keybind-profile.sh --profile desktop
-```
-
-Rebuild/install dwm for selected profile:
-
-```bash
 ./scripts/rebuild-dwm-profile.sh --profile laptop
-./scripts/rebuild-dwm-profile.sh --profile desktop
 ```
 
-## 5) DWM autostart behavior
+Use `desktop` instead of `laptop` when needed.
 
-`scripts/dwm-autostart.sh` can start:
+## Useful Checks
 
-- `dunst`
-- `picom`
-- `nm-applet`
-- `blueman-applet`
-- `pasystray`
-- `dwmblocks`
-- polkit agent
-- wallpaper script
-
-Per-profile toggles are in:
-
-- `profiles/laptop.conf`
-- `profiles/desktop.conf`
-
-Toggle variables:
-
-- `DWM_AUTOSTART_DUNST`
-- `DWM_AUTOSTART_PICOM`
-- `DWM_AUTOSTART_NM_APPLET`
-- `DWM_AUTOSTART_BLUEMAN`
-- `DWM_AUTOSTART_PASYSTRAY`
-- `DWM_AUTOSTART_DWMBLOCKS`
-
-## 6) dwmblocks setup
-
-Deploy config package:
+Dry-run before changes:
 
 ```bash
-./scripts/setup-dwmblocks.sh --mode symlink --force
+./scripts/install-dwm-stack.sh --dry-run --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services
+./scripts/post-install.sh --dry-run --mode symlink --force --setup-rofi --display-manager sddm --dm-theme hyprlike --rebuild-dwm
 ```
 
-Deploy + build/install against a local `dwmblocks` source tree:
+## CI
 
-```bash
-./scripts/setup-dwmblocks.sh --mode symlink --dwmblocks-src ~/projects/dwmblocks --build --force
-```
+GitHub Actions workflow: `.github/workflows/check.yml`
 
-### Included blocks
+Runs:
 
-- Volume, Network, CPU, Memory, Disk, Battery, Updates, Date
-
-### Click actions
-
-- Volume: left mute, right `pavucontrol`, scroll adjust volume
-- Network: left `nm-connection-editor`, right `nmtui`
-- CPU: left terminal monitor (`btop`/`htop`/`top`), right `gnome-system-monitor`
-- Memory: left terminal memory detail
-- Disk: left terminal disk detail, right open `/` in file manager
-- Battery: left status popup, right cycle `powerprofilesctl` profile (if available)
-- Updates: left open distro update command in terminal
-- Date: left popup calendar
-
-## 7) Rofi suite (Hypr-style)
-
-Install/update rofi suite manually:
-
-```bash
-./scripts/setup-rofi-suite.sh --mode symlink --force
-```
-
-This deploys the full repo `rofi/` directory (including `themes/` and `wallust/`) to `~/.config/rofi`.
-With `--force`, existing `~/.config/rofi` is replaced.
-
-Installed tools:
-
-- `rofi-beats.sh`: local + YouTube music player menu
-- `rofi-search.sh`: web search launcher (`ROFI_SEARCH_ENGINE` env supported)
-- `rofi-calc.sh`: calculator launcher (`qalc` preferred, `python3` fallback)
-
-## 8) Display-manager theming
-
-Apply SDDM hyprlike theme:
-
-```bash
-./scripts/setup-display-manager-theme.sh --dm sddm --theme hyprlike
-```
-
-Apply LightDM hyprlike preset:
-
-```bash
-./scripts/setup-display-manager-theme.sh --dm lightdm --theme hyprlike
-```
-
-## 9) Keybind highlights
-
-Core:
-
-- `Super+R`: rofi launcher
-- `Super+Return`: terminal
-- `Super+E`: file manager
-- `Super+B`: browser
-- `Super+C`: VS Code
-- `Super+D`: Discord
-- `Super+S`: rofi web search
-- `Super+Alt+C`: rofi calculator
-- `Super+Shift+M`: RofiBeats
-- `Super+Q`: lock session
-- `Ctrl+Alt+P`: power menu
-- `Super+Alt+N`: network settings
-- `Super+Shift+S`: area screenshot to clipboard
-- `Super+Print`: full screenshot to clipboard
-- `Super+1..9` / `Super+Shift+1..9`: view/move window to tag
-
-Laptop profile extras:
-
-- Brightness XF86 keys
-- Sleep key
-- Power key opens power menu
-- `Alt+Shift+Tab`: keyboard-layout reset helper
-
-Desktop profile extras:
-
-- `XF86Display`: open `arandr`
-- `Super+Ctrl+P`: toggle `picom`
-
-## 10) Updating this setup later
-
-If you pull new repo changes:
-
-```bash
-git pull
-./scripts/post-install.sh --mode symlink --force --rebuild-dwm
-```
-
-## 11) Troubleshooting
-
-- No DWM at login screen:
-  - rerun with `--install-session`
-  - verify `/usr/share/xsessions/dwm.desktop` exists
-- `startx` does not start DWM:
-  - ensure `~/.xinitrc` exists and is from this repo
-- Missing tray/services:
-  - check `profiles/*.conf` autostart toggles
-  - ensure packages are installed by `install-dwm-stack.sh`
-- `dwmblocks` not updating on volume keys:
-  - ensure `dwmblocks` is running and supports RTMIN signals
+- `bash -n` for shell syntax
+- `shellcheck` for shell linting
