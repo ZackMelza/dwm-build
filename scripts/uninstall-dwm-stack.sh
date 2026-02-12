@@ -42,7 +42,7 @@ run_cmd() {
 restore_latest() {
   local target="$1"
   local latest
-  latest="$(ls -1dt "${target}.bak."* 2>/dev/null | head -n1 || true)"
+  latest="$(find "$(dirname "$target")" -maxdepth 1 -name "$(basename "$target").bak.*" -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n1 | cut -d' ' -f2- || true)"
   if [[ -n "$latest" ]]; then
     run_cmd "rm -rf '$target'"
     run_cmd "mv '$latest' '$target'"

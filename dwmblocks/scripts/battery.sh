@@ -49,7 +49,13 @@ case "$button" in
     ;;
 esac
 
-bat="$(ls /sys/class/power_supply 2>/dev/null | grep '^BAT' | head -n1 || true)"
+bat=""
+for p in /sys/class/power_supply/BAT*; do
+  if [[ -e "$p" ]]; then
+    bat="$(basename "$p")"
+    break
+  fi
+done
 if [[ -z "$bat" ]]; then
   echo "AC"
   exit 0

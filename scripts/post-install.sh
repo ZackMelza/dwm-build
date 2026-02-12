@@ -172,7 +172,11 @@ if [[ -n "$profile" ]]; then
   profile_args="--profile '$profile' --force"
 fi
 run_cmd "'$HOME/.local/bin/set-dwm-profile.sh' $profile_args"
-run_cmd "'$HOME/.local/bin/set-dwm-keybind-profile.sh' ${profile:+--profile '$profile'}"
+keybind_args=""
+if [[ -n "$profile" ]]; then
+  keybind_args="--profile '$profile'"
+fi
+run_cmd "'$HOME/.local/bin/set-dwm-keybind-profile.sh' $keybind_args"
 run_cmd "'$HOME/.local/bin/setup-dwmblocks.sh' --mode '$mode' --force"
 
 if [[ $setup_rofi -eq 1 ]]; then
