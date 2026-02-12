@@ -25,17 +25,19 @@ check_file() {
 
 echo "DWM stack health check"
 
-for c in dwm rofi dmenu alacritty picom dunst feh playerctl brightnessctl; do
+for c in dwm rofi dmenu kitty zsh picom dunst feh playerctl brightnessctl; do
   check_cmd "$c"
 done
 
-for c in rofi-beats.sh rofi-search.sh rofi-calc.sh dwm-autostart.sh dwm-power-menu.sh show-keybinds.sh; do
+for c in rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh dwm-autostart.sh dwm-power-menu.sh show-keybinds.sh; do
   check_cmd "$c"
 done
 
 check_file "$HOME/.config/environment.d/99-dwm.conf"
 check_file "$HOME/.config/dwm/host.conf"
 check_file "$HOME/.config/rofi"
+check_file "$HOME/.config/kitty"
+check_file "$HOME/.zshrc"
 check_file "$HOME/.xinitrc"
 check_file "$HOME/.config/dwmblocks"
 

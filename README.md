@@ -6,6 +6,7 @@ This repo gives you a portable, profile-aware DWM setup with:
 - laptop/desktop detection
 - profile-based DWM build + runtime config
 - Hypr-like rofi tooling (RofiBeats/search/calc)
+- kitty terminal + zsh shell defaults (Oh My Zsh compatible)
 - optional SDDM/LightDM theming
 - dwmblocks package + scripts
 - bootstrap, health-check, and uninstall helpers
@@ -36,7 +37,7 @@ What this does:
 ### 2) Deploy user config and extras
 
 ```bash
-./scripts/post-install.sh --mode symlink --force --setup-rofi --display-manager sddm --dm-theme hyprlike --rebuild-dwm --backup
+./scripts/post-install.sh --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme hyprlike --rebuild-dwm --backup
 ```
 
 ## Start DWM
@@ -53,6 +54,8 @@ What this does:
 - `Super+Shift+M`: RofiBeats
 - `Super+Q`: close/kill focused app
 - `Ctrl+Alt+L`: lock session
+- `Super+Shift+O`: rofi zsh theme picker
+- `Super+Shift+T`: rofi kitty theme picker
 - `Super+Shift+S`: screenshot area
 - `Super+Print`: full screenshot
 
@@ -94,6 +97,7 @@ Options:
 - `--profile laptop|desktop`: force profile while configuring
 - `--install-session`: install X session desktop entry
 - `--setup-rofi`: install rofi suite
+- `--setup-shell`: install kitty + zsh suite
 - `--display-manager NAME`: `lightdm|sddm` (required if using `--dm-theme`)
 - `--dm-theme hyprlike`: apply DM theme
 - `--rebuild-dwm`: rebuild/install DWM after deployment
@@ -114,6 +118,16 @@ Options:
 
 ### `scripts/setup-rofi-suite.sh`
 Installs the full `rofi/` directory and rofi helper scripts.
+
+Options:
+
+- `--mode symlink|copy`: deploy by symlink or copy
+- `--force`: replace existing files
+- `--backup`: move existing targets to timestamped backup before replace
+- `--dry-run`: print actions only
+
+### `scripts/setup-shell-suite.sh`
+Installs kitty config and zsh defaults (Oh My Zsh + agnosterzak theme compatibility).
 
 Options:
 
@@ -179,7 +193,7 @@ Dry-run before changes:
 
 ```bash
 ./scripts/install-dwm-stack.sh --dry-run --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services
-./scripts/post-install.sh --dry-run --mode symlink --force --setup-rofi --display-manager sddm --dm-theme hyprlike --rebuild-dwm
+./scripts/post-install.sh --dry-run --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme hyprlike --rebuild-dwm
 ```
 
 ## CI

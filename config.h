@@ -67,7 +67,7 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "alacritty", NULL };
+static const char *termcmd[]  = { "kitty", NULL };
 static const char *browser[] = { "brave", NULL };
 static const char *filemanager[] = { "nemo", NULL };
 static const char *code[] = { "code", NULL };
@@ -76,6 +76,8 @@ static const char *rofi[] = { "rofi", "-show", "drun", "-modi", "drun,filebrowse
 static const char *rofibeats[] = { "rofi-beats.sh", NULL };
 static const char *rofisearch[] = { "rofi-search.sh", NULL };
 static const char *roficalc[] = { "rofi-calc.sh", NULL };
+static const char *rofizshtheme[] = { "rofi-zsh-theme.sh", NULL };
+static const char *rofikittytheme[] = { "rofi-kitty-theme.sh", NULL };
 static const char *lockcmd[] = { "loginctl", "lock-session", NULL };
 static const char *netcfg[] = { "nm-connection-editor", NULL };
 static const char *screenshot[] = { "/bin/sh", "-c", "maim -s | xclip -selection clipboard -t image/png", NULL };
@@ -93,6 +95,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_s,      spawn,          {.v = rofisearch } },
 	{ MODKEY|Mod1Mask,              XK_c,      spawn,          {.v = roficalc } },
 	{ MODKEY|ShiftMask,             XK_m,      spawn,          {.v = rofibeats } },
+	{ MODKEY|ShiftMask,             XK_o,      spawn,          {.v = rofizshtheme } },
+	{ MODKEY|ShiftMask,             XK_t,      spawn,          {.v = rofikittytheme } },
 	{ MODKEY|ShiftMask,             XK_s,      spawn,          {.v = screenshot } },
 	{ MODKEY,                       XK_Print,  spawn,          {.v = screenshot_full } },
 	{ MODKEY,                       XK_q,      killclient,     {0} },

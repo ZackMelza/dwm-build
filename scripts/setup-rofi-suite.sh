@@ -81,7 +81,7 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 run_cmd "mkdir -p '$HOME/.local/bin' '$HOME/.config'"
 
-for s in rofi-beats.sh rofi-search.sh rofi-calc.sh; do
+for s in rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh; do
   link_or_copy "$repo_root/scripts/rofi/$s" "$HOME/.local/bin/$s"
   run_cmd "chmod +x '$HOME/.local/bin/$s'"
 done

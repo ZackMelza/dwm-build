@@ -12,6 +12,7 @@ Options:
   --profile laptop|desktop  Force profile before writing host config
   --install-session         Install sessions/dwm.desktop to /usr/share/xsessions (sudo)
   --setup-rofi              Install Hypr-like rofi scripts/config
+  --setup-shell             Install kitty + zsh config/theme helpers
   --dm-theme hyprlike       Apply login theme to selected --display-manager
   --display-manager NAME    For --dm-theme: lightdm|sddm
   --rebuild-dwm             Rebuild/install dwm after profile deployment
@@ -26,6 +27,7 @@ mode="symlink"
 profile=""
 install_session=0
 setup_rofi=0
+setup_shell=0
 dm_theme="none"
 display_manager="none"
 rebuild_dwm=0
@@ -49,6 +51,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --setup-rofi)
       setup_rofi=1
+      shift
+      ;;
+    --setup-shell)
+      setup_shell=1
       shift
       ;;
     --dm-theme)
@@ -150,6 +156,7 @@ scripts=(
   dwm-power-menu.sh
   setup-dwmblocks.sh
   setup-rofi-suite.sh
+  setup-shell-suite.sh
   setup-display-manager-theme.sh
   health-check.sh
   uninstall-dwm-stack.sh
@@ -184,6 +191,14 @@ if [[ $setup_rofi -eq 1 ]]; then
     run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force --backup"
   else
     run_cmd "'$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force"
+  fi
+fi
+
+if [[ $setup_shell -eq 1 ]]; then
+  if [[ $backup -eq 1 ]]; then
+    run_cmd "'$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force --backup"
+  else
+    run_cmd "'$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force"
   fi
 fi
 
