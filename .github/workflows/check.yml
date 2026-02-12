@@ -15,12 +15,18 @@ jobs:
 
       - name: Bash syntax
         run: |
-          bash -n scripts/*.sh
-          bash -n scripts/rofi/*.sh
-          bash -n dwmblocks/scripts/*.sh
+          set -euo pipefail
+          mapfile -t files < <(find scripts dwmblocks -type f -name '*.sh' | sort)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No shell scripts found."
+            exit 1
+          fi
+          printf 'Checking bash syntax for %s files\n' "${#files[@]}"
+          bash -n "${files[@]}"
 
       - name: Shellcheck
         run: |
-          shellcheck scripts/*.sh
-          shellcheck scripts/rofi/*.sh
-          shellcheck dwmblocks/scripts/*.sh
+          set -euo pipefail
+          mapfile -t files < <(find scripts dwmblocks -type f -name '*.sh' | sort)
+          printf 'Running shellcheck on %s files\n' "${#files[@]}"
+          shellcheck -f gcc "${files[@]}"
