@@ -2,7 +2,21 @@ name: Checks
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - "scripts/**/*.sh"
+      - "dwmblocks/**/*.sh"
+      - ".github/workflows/check.yml"
   pull_request:
+    paths:
+      - "scripts/**/*.sh"
+      - "dwmblocks/**/*.sh"
+      - ".github/workflows/check.yml"
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   shell-checks:
