@@ -9,9 +9,9 @@ fi
 repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
 if [[ $EUID -eq 0 ]]; then
-  SUDO=""
+  SUDO=()
 elif command -v sudo >/dev/null 2>&1; then
-  SUDO="sudo"
+  SUDO=(sudo)
 else
   echo "Need root or sudo."
   exit 1
@@ -20,7 +20,7 @@ fi
 echo "[1/5] Rebuilding dwm..."
 make -C "$repo_root" clean
 make -C "$repo_root"
-$SUDO make -C "$repo_root" install
+"${SUDO[@]}" make -C "$repo_root" install
 
 dwm_bin="$(command -v dwm 2>/dev/null || true)"
 if [[ -z "$dwm_bin" && -x /usr/local/bin/dwm ]]; then
@@ -35,10 +35,10 @@ if [[ -z "$dwm_bin" ]]; then
 fi
 
 echo "[2/5] Installing session entry..."
-$SUDO install -Dm644 "$repo_root/sessions/dwm.desktop" /usr/share/xsessions/dwm.desktop
+"${SUDO[@]}" install -Dm644 "$repo_root/sessions/dwm.desktop" /usr/share/xsessions/dwm.desktop
 
 echo "[3/5] Installing dwm session wrapper..."
-cat <<'WRAP' | $SUDO tee /usr/local/bin/dwm-session >/dev/null
+cat <<'WRAP' | "${SUDO[@]}" tee /usr/local/bin/dwm-session >/dev/null
 #!/usr/bin/env sh
 set -eu
 LOG="${XDG_RUNTIME_DIR:-/tmp}/dwm-session.log"
@@ -65,16 +65,16 @@ fi
 
 exec "$DWM_BIN" >> "$LOG" 2>&1
 WRAP
-$SUDO chmod 755 /usr/local/bin/dwm-session
+"${SUDO[@]}" chmod 755 /usr/local/bin/dwm-session
 
 echo "[4/5] Pointing session to wrapper..."
-$SUDO sed -i 's|^Exec=.*|Exec=/usr/local/bin/dwm-session|; s|^TryExec=.*|TryExec=/usr/local/bin/dwm-session|' /usr/share/xsessions/dwm.desktop
+"${SUDO[@]}" sed -i 's|^Exec=.*|Exec=/usr/local/bin/dwm-session|; s|^TryExec=.*|TryExec=/usr/local/bin/dwm-session|' /usr/share/xsessions/dwm.desktop
 
 echo "[5/5] Restarting display manager..."
 if systemctl list-unit-files | grep -q '^sddm\.service'; then
-  $SUDO systemctl restart sddm
+  "${SUDO[@]}" systemctl restart sddm
 elif systemctl list-unit-files | grep -q '^lightdm\.service'; then
-  $SUDO systemctl restart lightdm
+  "${SUDO[@]}" systemctl restart lightdm
 else
   echo "No sddm/lightdm service found. Start your DM manually."
 fi

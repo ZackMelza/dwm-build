@@ -58,6 +58,16 @@ DWM_REPO_ROOT="$repo_root" bash -c "'$repo_root/scripts/post-install.sh' --mode 
 ensure_session_entry() {
   local session_file="/usr/share/xsessions/dwm.desktop"
   local wrapper="/usr/local/bin/dwm-session"
+  run_root() {
+    if [[ $EUID -eq 0 ]]; then
+      "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo "$@"
+    else
+      echo "Warning: no sudo, cannot run privileged command: $*" >&2
+      return 1
+    fi
+  }
 
   install_wrapper() {
     if [[ $dry_run -eq 1 ]]; then
@@ -65,7 +75,10 @@ ensure_session_entry() {
       return 0
     fi
 
-    local payload='#!/usr/bin/env sh
+    local tmpf
+    tmpf="$(mktemp)"
+    cat >"$tmpf" <<'WRAP'
+#!/usr/bin/env sh
 set -eu
 LOG="${XDG_RUNTIME_DIR:-/tmp}/dwm-session.log"
 {
@@ -90,17 +103,9 @@ if [ -z "$DWM_BIN" ]; then
 fi
 
 exec "$DWM_BIN" >> "$LOG" 2>&1
-'
-
-    if [[ $EUID -eq 0 ]]; then
-      printf '%s\n' "$payload" > "$wrapper"
-      chmod 755 "$wrapper"
-    elif command -v sudo >/dev/null 2>&1; then
-      printf '%s\n' "$payload" | sudo tee "$wrapper" >/dev/null
-      sudo chmod 755 "$wrapper"
-    else
-      echo "Warning: no sudo, cannot install $wrapper" >&2
-    fi
+WRAP
+    run_root install -m 755 "$tmpf" "$wrapper" || true
+    rm -f "$tmpf"
   }
 
   if [[ $dry_run -eq 1 ]]; then
@@ -112,20 +117,25 @@ exec "$DWM_BIN" >> "$LOG" 2>&1
   install_wrapper
 
   if [[ ! -f "$session_file" ]]; then
-    if [[ $EUID -eq 0 ]]; then
-      install -Dm644 "$repo_root/sessions/dwm.desktop" "$session_file"
-    elif command -v sudo >/dev/null 2>&1; then
-      sudo install -Dm644 "$repo_root/sessions/dwm.desktop" "$session_file"
-    else
+    if ! run_root install -Dm644 "$repo_root/sessions/dwm.desktop" "$session_file"; then
       echo "Warning: missing $session_file and no sudo to install it." >&2
       return 0
     fi
   fi
 
-  if [[ $EUID -eq 0 ]]; then
-    sed -i "s|^Exec=.*|Exec=$wrapper|; s|^TryExec=.*|TryExec=$wrapper|" "$session_file"
-  elif command -v sudo >/dev/null 2>&1; then
-    sudo sed -i "s|^Exec=.*|Exec=$wrapper|; s|^TryExec=.*|TryExec=$wrapper|" "$session_file"
+  run_root sed -i "s|^Exec=.*|Exec=$wrapper|; s|^TryExec=.*|TryExec=$wrapper|" "$session_file" || true
+
+  # Old NVIDIA cards are more reliable with SDDM on X11.
+  if command -v lspci >/dev/null 2>&1 && lspci | grep -qi nvidia; then
+    run_root install -d /etc/sddm.conf.d || true
+    if [[ $dry_run -eq 1 ]]; then
+      echo "[dry-run] write /etc/sddm.conf.d/00-displayserver.conf"
+    else
+      cat <<'CONF' | run_root tee /etc/sddm.conf.d/00-displayserver.conf >/dev/null || true
+[General]
+DisplayServer=x11
+CONF
+    fi
   fi
 }
 
