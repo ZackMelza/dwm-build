@@ -6,7 +6,7 @@ zshrc="$HOME/.zshrc"
 rofi_theme="${ROFI_CONF_DIR:-$HOME/.config/rofi}/config-zsh-theme.rasi"
 
 if [[ ! -d "$themes_dir" ]]; then
-  command -v notify-send >/dev/null 2>&1 && notify-send "Rofi Zsh Theme" "~/.oh-my-zsh/themes not found"
+  command -v notify-send >/dev/null 2>&1 && notify-send "Rofi Zsh Theme" "$HOME/.oh-my-zsh/themes not found"
   exit 1
 fi
 
@@ -24,7 +24,11 @@ if [[ "$choice" == "Random" ]]; then
 fi
 
 if [[ ! -f "$zshrc" ]]; then
-  printf 'export ZSH="$HOME/.oh-my-zsh"\nZSH_THEME="%s"\nsource "$ZSH/oh-my-zsh.sh"\n' "$choice" >"$zshrc"
+  {
+    printf 'export ZSH="%s"\n' "$HOME/.oh-my-zsh"
+    printf 'ZSH_THEME="%s"\n' "$choice"
+    printf 'source "%s"\n' "$HOME/.oh-my-zsh/oh-my-zsh.sh"
+  } >"$zshrc"
 else
   if grep -q '^ZSH_THEME=' "$zshrc"; then
     sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"$choice\"/" "$zshrc"
