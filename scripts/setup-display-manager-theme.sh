@@ -9,14 +9,14 @@ Apply login-manager theming.
 
 Options:
   --dm sddm|lightdm      Target DM (required)
-  --theme hyprlike       Theme preset (default: hyprlike)
+  --theme breeze|hyprlike Theme preset (default: breeze)
   --backup               Backup existing DM config/theme before overwrite
   --dry-run              Print actions only
 USAGE
 }
 
 dm=""
-theme="hyprlike"
+theme="breeze"
 backup=0
 dry_run=0
 
@@ -54,7 +54,7 @@ if [[ "$dm" != "sddm" && "$dm" != "lightdm" ]]; then
   exit 1
 fi
 
-if [[ "$theme" != "hyprlike" ]]; then
+if [[ "$theme" != "hyprlike" && "$theme" != "breeze" ]]; then
   echo "Unsupported theme: $theme" >&2
   exit 1
 fi
@@ -98,19 +98,41 @@ require_path() {
 }
 
 if [[ "$dm" == "sddm" ]]; then
-  theme_src="$repo_root/themes/sddm/dwm-hyprlike"
-  theme_dst="/usr/share/sddm/themes/dwm-hyprlike"
   conf_dir="/etc/sddm.conf.d"
-  conf_file="$conf_dir/10-dwm-hyprlike-theme.conf"
+  conf_file="$conf_dir/10-dwm-theme.conf"
+  x11_conf="$conf_dir/00-displayserver.conf"
+  chosen_theme="$theme"
 
-  require_path "$theme_src"
-
-  run_cmd "$SUDO install -d '$theme_dst'"
-  if [[ $backup -eq 1 ]]; then
-    run_cmd "$SUDO test ! -e '$theme_dst' || $SUDO mv '$theme_dst' '${theme_dst}.bak.$(date +%Y%m%d%H%M%S)'"
+  if [[ "$theme" == "hyprlike" ]]; then
+    theme_src="$repo_root/themes/sddm/dwm-hyprlike"
+    theme_dst="/usr/share/sddm/themes/dwm-hyprlike"
+    require_path "$theme_src"
     run_cmd "$SUDO install -d '$theme_dst'"
+    if [[ $backup -eq 1 ]]; then
+      run_cmd "$SUDO test ! -e '$theme_dst' || $SUDO mv '$theme_dst' '${theme_dst}.bak.$(date +%Y%m%d%H%M%S)'"
+      run_cmd "$SUDO install -d '$theme_dst'"
+    fi
+    run_cmd "$SUDO cp -r '$theme_src/'* '$theme_dst/'"
+    chosen_theme="dwm-hyprlike"
   fi
-  run_cmd "$SUDO cp -r '$theme_src/'* '$theme_dst/'"
+
+  if [[ "$theme" == "breeze" ]]; then
+    if [[ ! -d /usr/share/sddm/themes/breeze ]]; then
+      for fallback in maldives elarun maya; do
+        if [[ -d "/usr/share/sddm/themes/$fallback" ]]; then
+          chosen_theme="$fallback"
+          break
+        fi
+      done
+      if [[ "$chosen_theme" == "breeze" ]]; then
+        first_theme="$(find /usr/share/sddm/themes -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | head -n1 || true)"
+        if [[ -n "$first_theme" ]]; then
+          chosen_theme="$first_theme"
+        fi
+      fi
+    fi
+  fi
+
   run_cmd "$SUDO install -d '$conf_dir'"
   if [[ $backup -eq 1 ]]; then
     run_cmd "$SUDO test ! -e '$conf_file' || $SUDO cp '$conf_file' '${conf_file}.bak.$(date +%Y%m%d%H%M%S)'"
@@ -119,20 +141,33 @@ if [[ "$dm" == "sddm" ]]; then
   if [[ $dry_run -eq 1 ]]; then
     echo "[dry-run] write $conf_file"
   else
-    $SUDO tee "$conf_file" >/dev/null <<'CONF'
+    $SUDO tee "$conf_file" >/dev/null <<CONF
 [Theme]
-Current=dwm-hyprlike
+Current=$chosen_theme
 CursorTheme=Bibata-Modern-Ice
 CONF
   fi
 
-  echo "Applied SDDM theme: dwm-hyprlike"
+  if [[ $dry_run -eq 1 ]]; then
+    echo "[dry-run] write $x11_conf"
+  else
+    $SUDO tee "$x11_conf" >/dev/null <<'CONF'
+[General]
+DisplayServer=x11
+CONF
+  fi
+
+  echo "Applied SDDM theme: $chosen_theme (X11 forced)"
   exit 0
 fi
 
 # lightdm
 conf_dir="/etc/lightdm/lightdm-gtk-greeter.conf.d"
-conf_file="$conf_dir/10-dwm-hyprlike.conf"
+conf_file="$conf_dir/10-dwm-theme.conf"
+gtk_theme="Adwaita-dark"
+if [[ "$theme" == "breeze" ]]; then
+  gtk_theme="Breeze"
+fi
 run_cmd "$SUDO install -d '$conf_dir'"
 if [[ $backup -eq 1 ]]; then
   run_cmd "$SUDO test ! -e '$conf_file' || $SUDO cp '$conf_file' '${conf_file}.bak.$(date +%Y%m%d%H%M%S)'"
@@ -144,7 +179,7 @@ else
   $SUDO tee "$conf_file" >/dev/null <<'CONF'
 [greeter]
 background=#0f111a
-theme-name=Adwaita-dark
+theme-name=$gtk_theme
 icon-theme-name=Papirus-Dark
 cursor-theme-name=Bibata-Modern-Ice
 font-name=Sans 11
@@ -153,4 +188,4 @@ position=20%,center 50%,center
 CONF
 fi
 
-echo "Applied LightDM GTK greeter hyprlike settings"
+echo "Applied LightDM GTK greeter theme: $theme"

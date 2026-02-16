@@ -102,6 +102,9 @@ fi
 if [[ $dry_run -eq 1 ]]; then
   echo "Would write: $env_file"
   echo "$profile_line"
+  echo "XDG_SESSION_TYPE=x11"
+  echo "GDK_BACKEND=x11"
+  echo "QT_QPA_PLATFORM=xcb"
   echo "Would write: $host_conf"
   echo "source \"$profile_file\""
   exit 0
@@ -117,7 +120,12 @@ if [[ -f "$env_file" && $force -ne 1 ]]; then
     exit 1
   fi
 else
-  printf '%s\n' "$profile_line" > "$env_file"
+  cat > "$env_file" <<ENV
+$profile_line
+XDG_SESSION_TYPE=x11
+GDK_BACKEND=x11
+QT_QPA_PLATFORM=xcb
+ENV
   echo "Wrote $env_file"
 fi
 

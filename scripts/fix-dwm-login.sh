@@ -42,6 +42,11 @@ cat <<'WRAP' | "${SUDO[@]}" tee /usr/local/bin/dwm-session >/dev/null
 #!/usr/bin/env sh
 set -eu
 LOG="${XDG_RUNTIME_DIR:-/tmp}/dwm-session.log"
+export XDG_SESSION_TYPE=x11
+export GDK_BACKEND=x11
+export QT_QPA_PLATFORM=xcb
+unset WAYLAND_DISPLAY
+unset XDG_SESSION_DESKTOP
 {
   echo "== $(date) =="
   echo "USER=$USER HOME=$HOME"
@@ -69,6 +74,14 @@ WRAP
 
 echo "[4/5] Pointing session to wrapper..."
 "${SUDO[@]}" sed -i 's|^Exec=.*|Exec=/usr/local/bin/dwm-session|; s|^TryExec=.*|TryExec=/usr/local/bin/dwm-session|' /usr/share/xsessions/dwm.desktop
+
+if systemctl list-unit-files | grep -q '^sddm\.service'; then
+  "${SUDO[@]}" install -d /etc/sddm.conf.d
+  cat <<'CONF' | "${SUDO[@]}" tee /etc/sddm.conf.d/00-displayserver.conf >/dev/null
+[General]
+DisplayServer=x11
+CONF
+fi
 
 echo "[5/5] Restarting display manager..."
 if systemctl list-unit-files | grep -q '^sddm\.service'; then

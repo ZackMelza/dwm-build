@@ -10,7 +10,7 @@ One-shot bootstrap for fresh systems.
 Options:
   --profile auto|laptop|desktop
   --display-manager lightdm|sddm|greetd|ly|none
-  --dm-theme none|hyprlike
+  --dm-theme none|breeze|hyprlike
   --mode symlink|copy
   --enable-services
   --disable-services
@@ -133,7 +133,7 @@ prompt_with_default() {
 if [[ $interactive -eq 1 && -t 0 ]]; then
   [[ -z "$profile" ]] && profile="$(prompt_with_default "Profile (auto/laptop/desktop)" "auto")"
   [[ -z "$dm" ]] && dm="$(prompt_with_default "Display manager (sddm/lightdm/greetd/ly/none)" "sddm")"
-  [[ -z "$dm_theme" ]] && dm_theme="$(prompt_with_default "DM theme (none/hyprlike)" "none")"
+  [[ -z "$dm_theme" ]] && dm_theme="$(prompt_with_default "DM theme (none/breeze/hyprlike)" "breeze")"
   [[ -z "$mode" ]] && mode="$(prompt_with_default "Deploy mode (symlink/copy)" "symlink")"
   if [[ -z "$enable_services" ]]; then
     ans="$(prompt_with_default "Enable services" "yes")"
@@ -145,7 +145,7 @@ if [[ $interactive -eq 1 && -t 0 ]]; then
 else
   [[ -z "$profile" ]] && profile="auto"
   [[ -z "$dm" ]] && dm="sddm"
-  [[ -z "$dm_theme" ]] && dm_theme="none"
+  [[ -z "$dm_theme" ]] && dm_theme="breeze"
   [[ -z "$mode" ]] && mode="symlink"
   [[ -z "$enable_services" ]] && enable_services=1
 fi
@@ -159,7 +159,7 @@ case "$dm" in
   *) echo "Invalid display manager: $dm" >&2; exit 1 ;;
 esac
 case "$dm_theme" in
-  none|hyprlike) ;;
+  none|breeze|hyprlike) ;;
   *) echo "Invalid dm theme: $dm_theme" >&2; exit 1 ;;
 esac
 case "$mode" in
@@ -209,6 +209,11 @@ ensure_session_entry() {
 #!/usr/bin/env sh
 set -eu
 LOG="${XDG_RUNTIME_DIR:-/tmp}/dwm-session.log"
+export XDG_SESSION_TYPE=x11
+export GDK_BACKEND=x11
+export QT_QPA_PLATFORM=xcb
+unset WAYLAND_DISPLAY
+unset XDG_SESSION_DESKTOP
 {
   echo "== $(date) =="
   echo "USER=$USER HOME=$HOME"
@@ -253,7 +258,7 @@ WRAP
 
   run_root sed -i "s|^Exec=.*|Exec=$wrapper|; s|^TryExec=.*|TryExec=$wrapper|" "$session_file" || true
 
-  if [[ "$dm" == "sddm" ]] && command -v lspci >/dev/null 2>&1 && lspci | grep -qi nvidia; then
+  if [[ "$dm" == "sddm" ]]; then
     run_root install -d /etc/sddm.conf.d || true
     if [[ $dry_run -eq 1 ]]; then
       echo "[dry-run] write /etc/sddm.conf.d/00-displayserver.conf"

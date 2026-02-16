@@ -13,7 +13,7 @@ Options:
   --install-session         Install sessions/dwm.desktop to /usr/share/xsessions (sudo)
   --setup-rofi              Install Hypr-like rofi scripts/config
   --setup-shell             Install kitty + zsh config/theme helpers
-  --dm-theme hyprlike       Apply login theme to selected --display-manager
+  --dm-theme breeze|hyprlike Apply login theme to selected --display-manager
   --display-manager NAME    For --dm-theme: lightdm|sddm
   --rebuild-dwm             Rebuild/install dwm after profile deployment
   --backup                  Backup target files before overwrite where supported
@@ -98,7 +98,7 @@ if [[ "$mode" != "symlink" && "$mode" != "copy" ]]; then
   exit 1
 fi
 
-if [[ "$dm_theme" != "none" && "$dm_theme" != "hyprlike" ]]; then
+if [[ "$dm_theme" != "none" && "$dm_theme" != "hyprlike" && "$dm_theme" != "breeze" ]]; then
   echo "Invalid dm theme: $dm_theme" >&2
   exit 1
 fi

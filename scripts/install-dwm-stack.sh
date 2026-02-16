@@ -10,7 +10,7 @@ Installs a portable DWM stack with distro-aware package selection.
 Options:
   --profile laptop|desktop    Force machine profile (default: auto detect)
   --display-manager NAME      Set login manager: lightdm|sddm|greetd|ly|none
-  --dm-theme NAME             Login theme: none|hyprlike (for sddm/lightdm)
+  --dm-theme NAME             Login theme: none|breeze|hyprlike (for sddm/lightdm)
   --backup                    Backup files before overwrite where supported
   --enable-services           Enable common services (NetworkManager, bluetooth, display manager)
   --install-xinitrc           Install repo xinitrc to ~/.xinitrc
@@ -127,7 +127,7 @@ if [[ "$display_manager" != "lightdm" && "$display_manager" != "sddm" && "$displ
   exit 1
 fi
 
-if [[ "$dm_theme" != "none" && "$dm_theme" != "hyprlike" ]]; then
+if [[ "$dm_theme" != "none" && "$dm_theme" != "hyprlike" && "$dm_theme" != "breeze" ]]; then
   echo "Invalid dm theme: $dm_theme" >&2
   exit 1
 fi

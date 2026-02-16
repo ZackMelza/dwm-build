@@ -89,7 +89,9 @@ if [[ $remove_session -eq 1 ]]; then
 fi
 
 if [[ "$dm" == "sddm" ]]; then
+  run_cmd "sudo rm -f /etc/sddm.conf.d/10-dwm-theme.conf"
   run_cmd "sudo rm -f /etc/sddm.conf.d/10-dwm-hyprlike-theme.conf"
+  run_cmd "sudo rm -f /etc/sddm.conf.d/00-displayserver.conf"
   run_cmd "sudo rm -rf /usr/share/sddm/themes/dwm-hyprlike"
 elif [[ "$dm" == "lightdm" ]]; then
   run_cmd "sudo rm -f /etc/lightdm/lightdm-gtk-greeter.conf.d/10-dwm-hyprlike.conf"

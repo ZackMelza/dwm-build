@@ -5,6 +5,7 @@ This repo gives you a portable, profile-aware DWM setup with:
 - distro-aware package installation
 - laptop/desktop detection
 - profile-based DWM build + runtime config
+- Xorg-only session defaults (no Wayland dependency)
 - Hypr-like rofi tooling (RofiBeats/search/calc)
 - kitty terminal + zsh shell defaults (Oh My Zsh compatible)
 - optional SDDM/LightDM theming
@@ -16,7 +17,7 @@ This repo gives you a portable, profile-aware DWM setup with:
 Run one command on a fresh system:
 
 ```bash
-./scripts/bootstrap.sh --display-manager sddm --dm-theme hyprlike --mode symlink
+./scripts/bootstrap.sh --display-manager sddm --dm-theme breeze --mode symlink
 ```
 
 What this does:
@@ -31,13 +32,13 @@ What this does:
 ### 1) Install packages + DWM
 
 ```bash
-./scripts/install-dwm-stack.sh --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services --backup
+./scripts/install-dwm-stack.sh --display-manager sddm --dm-theme breeze --install-xinitrc --install-session --enable-services --backup
 ```
 
 ### 2) Deploy user config and extras
 
 ```bash
-./scripts/post-install.sh --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme hyprlike --rebuild-dwm --backup
+./scripts/post-install.sh --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme breeze --rebuild-dwm --backup
 ```
 
 ## Start DWM
@@ -66,11 +67,14 @@ One-shot installer for fresh systems.
 
 Options:
 
-- `--profile laptop|desktop`: force machine profile
+- Prompts interactively by default for profile/DM/theme/mode/services
+- `--profile auto|laptop|desktop`: force machine profile
 - `--display-manager lightdm|sddm|greetd|ly|none`: login manager to set up
-- `--dm-theme none|hyprlike`: apply DM theme preset
+- `--dm-theme none|breeze|hyprlike`: apply DM theme preset (`breeze` recommended for compatibility)
 - `--mode symlink|copy`: deployment mode for post-install files
 - `--enable-services`: enable NetworkManager/bluetooth/tlp/DM when available
+- `--disable-services`: skip service enablement
+- `--non-interactive`: skip prompts and use flags/defaults
 - `--dry-run`: print actions without applying changes
 
 ### `scripts/install-dwm-stack.sh`
@@ -80,7 +84,7 @@ Options:
 
 - `--profile laptop|desktop`: force profile (default is auto-detect)
 - `--display-manager NAME`: `lightdm|sddm|greetd|ly|none`
-- `--dm-theme NAME`: `none|hyprlike` (used for `sddm`/`lightdm`)
+- `--dm-theme NAME`: `none|breeze|hyprlike` (used for `sddm`/`lightdm`)
 - `--backup`: keep timestamped backups before overwrite where supported
 - `--enable-services`: enable core services
 - `--install-xinitrc`: install repo `xinitrc` to `~/.xinitrc`
@@ -99,7 +103,7 @@ Options:
 - `--setup-rofi`: install rofi suite
 - `--setup-shell`: install kitty + zsh suite
 - `--display-manager NAME`: `lightdm|sddm` (required if using `--dm-theme`)
-- `--dm-theme hyprlike`: apply DM theme
+- `--dm-theme breeze|hyprlike`: apply DM theme
 - `--rebuild-dwm`: rebuild/install DWM after deployment
 - `--backup`: backup target files before overwrite
 - `--force`: overwrite existing files/links
@@ -142,7 +146,7 @@ Applies login screen theme config.
 Options:
 
 - `--dm sddm|lightdm`: target display manager
-- `--theme hyprlike`: theme preset
+- `--theme breeze|hyprlike`: theme preset
 - `--backup`: backup old DM config/theme before overwrite
 - `--dry-run`: print actions only
 
@@ -192,9 +196,16 @@ Use `desktop` instead of `laptop` when needed.
 Dry-run before changes:
 
 ```bash
-./scripts/install-dwm-stack.sh --dry-run --display-manager sddm --dm-theme hyprlike --install-xinitrc --install-session --enable-services
-./scripts/post-install.sh --dry-run --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme hyprlike --rebuild-dwm
+./scripts/install-dwm-stack.sh --dry-run --display-manager sddm --dm-theme breeze --install-xinitrc --install-session --enable-services
+./scripts/post-install.sh --dry-run --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme breeze --rebuild-dwm
 ```
+
+## Xorg Compatibility
+
+- Session environment is forced to X11 (`XDG_SESSION_TYPE=x11`, `GDK_BACKEND=x11`, `QT_QPA_PLATFORM=xcb`).
+- SDDM is forced to `DisplayServer=x11`.
+- On Arch-like systems, bootstrap installs `paru` automatically if missing.
+- For maximum display-manager stability on old GPUs, prefer `--dm-theme breeze`.
 
 ## CI
 
