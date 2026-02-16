@@ -42,6 +42,7 @@ cat <<'WRAP' | "${SUDO[@]}" tee /usr/local/bin/dwm-session >/dev/null
 #!/usr/bin/env sh
 set -eu
 LOG="${XDG_RUNTIME_DIR:-/tmp}/dwm-session.log"
+export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
 export XDG_SESSION_TYPE=x11
 export GDK_BACKEND=x11
 export QT_QPA_PLATFORM=xcb

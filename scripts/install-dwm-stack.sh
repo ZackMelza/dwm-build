@@ -338,7 +338,7 @@ install_to_user_bin "$repo_root/scripts/health-check.sh" "$HOME/.local/bin/dwm-h
 install_to_user_bin "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bin/dwm-uninstall.sh"
 install_to_user_bin "$repo_root/scripts/generate-keybind-cheatsheet.sh" "$HOME/.local/bin/generate-keybind-cheatsheet.sh"
 install_to_user_bin "$repo_root/scripts/show-keybinds.sh" "$HOME/.local/bin/show-keybinds.sh"
-run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force --build"
 if [[ $backup -eq 1 ]]; then
   run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force --backup"
 else

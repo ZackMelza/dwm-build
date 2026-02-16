@@ -25,7 +25,8 @@ What this does (single entrypoint):
 1. Installs packages and builds/installs DWM.
 2. Deploys user config/scripts.
 3. Sets profile and rebuilds DWM for that profile.
-4. Installs rofi suite and (optionally) DM theme.
+4. Builds/installs `dwmblocks` and deploys `~/.config/dwmblocks`.
+5. Installs rofi suite and (optionally) DM theme.
 
 ## Manual Setup (Optional Advanced)
 
@@ -67,7 +68,7 @@ One-shot installer for fresh systems. This is the main script that runs full con
 
 Options:
 
-- Prompts interactively by default for profile/DM/theme/mode/services
+- Prompts interactively by default with numbered choices for profile/DM/theme/mode/services
 - `--profile auto|laptop|desktop`: force machine profile
 - `--display-manager lightdm|sddm|greetd|ly|none`: login manager to set up
 - `--dm-theme none|breeze|hyprlike`: apply DM theme preset (`breeze` recommended for compatibility)
@@ -157,7 +158,8 @@ Options:
 
 - `--mode symlink|copy`: deploy mode
 - `--dwmblocks-src PATH`: local dwmblocks source tree path
-- `--build`: build/install dwmblocks in that source tree
+- `--build`: build/install dwmblocks (auto-clones source to `/tmp` if `--dwmblocks-src` is not set)
+- `--repo-url URL`: override dwmblocks clone URL used by `--build`
 - `--force`: overwrite existing targets
 - `--dry-run`: print actions only
 - `-h, --help`: show help
@@ -206,6 +208,7 @@ Dry-run before changes:
 - SDDM is forced to `DisplayServer=x11`.
 - On Arch-like systems, bootstrap installs `paru` automatically if missing.
 - For maximum display-manager stability on old GPUs, prefer `--dm-theme breeze`.
+- Session/autostart PATH is hardened so `dwmblocks` and user scripts are found under display managers.
 
 ## Notes
 

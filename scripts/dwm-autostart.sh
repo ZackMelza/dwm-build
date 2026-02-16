@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+
 run_once() {
   local name="$1"
   shift
@@ -66,7 +68,13 @@ if enabled DWM_AUTOSTART_PASYSTRAY; then
 fi
 
 if enabled DWM_AUTOSTART_DWMBLOCKS; then
-  run_once dwmblocks dwmblocks
+  if command -v dwmblocks >/dev/null 2>&1; then
+    run_once dwmblocks dwmblocks
+  elif [[ -x /usr/local/bin/dwmblocks ]]; then
+    run_once dwmblocks /usr/local/bin/dwmblocks
+  elif [[ -x /usr/bin/dwmblocks ]]; then
+    run_once dwmblocks /usr/bin/dwmblocks
+  fi
 fi
 
 if ! pgrep -u "$USER" -f "polkit.*authentication-agent" >/dev/null 2>&1; then

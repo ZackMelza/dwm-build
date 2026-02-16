@@ -49,6 +49,37 @@ if command -v readlink >/dev/null 2>&1; then
 fi
 repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
+if [[ -t 1 ]]; then
+  C_RESET=$'\033[0m'
+  C_BOLD=$'\033[1m'
+  C_BLUE=$'\033[34m'
+  C_GREEN=$'\033[32m'
+  C_YELLOW=$'\033[33m'
+else
+  C_RESET=""
+  C_BOLD=""
+  C_BLUE=""
+  C_GREEN=""
+  C_YELLOW=""
+fi
+
+print_banner() {
+  printf '%s%sDWM Bootstrap (Xorg-first)%s\n' "$C_BOLD" "$C_BLUE" "$C_RESET"
+  printf '%sRepository:%s %s\n' "$C_BOLD" "$C_RESET" "$repo_root"
+}
+
+print_step() {
+  printf '%s[%s]%s %s\n' "$C_BLUE" "$1" "$C_RESET" "$2"
+}
+
+print_ok() {
+  printf '%s%s%s\n' "$C_GREEN" "$1" "$C_RESET"
+}
+
+print_warn() {
+  printf '%s%s%s\n' "$C_YELLOW" "$1" "$C_RESET" >&2
+}
+
 run_cmd() {
   if [[ $dry_run -eq 1 ]]; then
     printf '[dry-run] %s\n' "$*"
@@ -67,7 +98,7 @@ run_root() {
   elif command -v sudo >/dev/null 2>&1; then
     sudo "$@"
   else
-    echo "Need root or sudo: $*" >&2
+    print_warn "Need root or sudo: $*"
     return 1
   fi
 }
@@ -93,11 +124,11 @@ ensure_paru_arch() {
   fi
 
   if [[ $EUID -eq 0 ]]; then
-    echo "Run bootstrap as a regular user (not root) so paru can be built." >&2
+    print_warn "Run bootstrap as a regular user (not root) so paru can be built."
     exit 1
   fi
 
-  echo "paru not found; installing paru (AUR helper)..."
+  print_step "paru" "paru not found; installing paru (AUR helper)"
   run_root pacman -S --needed --noconfirm base-devel git
 
   local build_dir
@@ -116,31 +147,42 @@ ensure_paru_arch() {
     makepkg -si --noconfirm
   )
   rm -rf "$build_dir"
+  print_ok "paru installed."
 }
 
-prompt_with_default() {
-  local label="$1"
-  local default="$2"
-  local value
-  read -r -p "$label [$default]: " value
-  if [[ -z "$value" ]]; then
-    printf '%s' "$default"
-  else
-    printf '%s' "$value"
-  fi
+menu_select() {
+  local title="$1"
+  local default_index="$2"
+  shift 2
+  local options=("$@")
+  local answer
+
+  printf '%s%s%s\n' "$C_BOLD" "$title" "$C_RESET"
+  for i in "${!options[@]}"; do
+    printf '  %d) %s\n' "$((i + 1))" "${options[$i]}"
+  done
+
+  while true; do
+    read -r -p "Choose [${default_index}]: " answer
+    if [[ -z "$answer" ]]; then
+      answer="$default_index"
+    fi
+    if [[ "$answer" =~ ^[0-9]+$ ]] && (( answer >= 1 && answer <= ${#options[@]} )); then
+      printf '%s' "${options[$((answer - 1))]}"
+      return 0
+    fi
+    print_warn "Invalid choice. Enter a number between 1 and ${#options[@]}."
+  done
 }
 
 if [[ $interactive -eq 1 && -t 0 ]]; then
-  [[ -z "$profile" ]] && profile="$(prompt_with_default "Profile (auto/laptop/desktop)" "auto")"
-  [[ -z "$dm" ]] && dm="$(prompt_with_default "Display manager (sddm/lightdm/greetd/ly/none)" "sddm")"
-  [[ -z "$dm_theme" ]] && dm_theme="$(prompt_with_default "DM theme (none/breeze/hyprlike)" "breeze")"
-  [[ -z "$mode" ]] && mode="$(prompt_with_default "Deploy mode (symlink/copy)" "symlink")"
+  [[ -z "$profile" ]] && profile="$(menu_select "Profile" 1 auto laptop desktop)"
+  [[ -z "$dm" ]] && dm="$(menu_select "Display Manager" 1 sddm lightdm greetd ly none)"
+  [[ -z "$dm_theme" ]] && dm_theme="$(menu_select "DM Theme" 2 none breeze hyprlike)"
+  [[ -z "$mode" ]] && mode="$(menu_select "Deploy Mode" 1 symlink copy)"
   if [[ -z "$enable_services" ]]; then
-    ans="$(prompt_with_default "Enable services" "yes")"
-    case "$ans" in
-      y|Y|yes|YES|true|1) enable_services=1 ;;
-      *) enable_services=0 ;;
-    esac
+    ans="$(menu_select "Enable Services" 1 yes no)"
+    [[ "$ans" == "yes" ]] && enable_services=1 || enable_services=0
   fi
 else
   [[ -z "$profile" ]] && profile="auto"
@@ -171,6 +213,10 @@ if [[ "$dm" == "none" ]]; then
   dm_theme="none"
 fi
 
+print_banner
+print_step "config" "Selected profile=$profile dm=$dm dm_theme=$dm_theme mode=$mode enable_services=$enable_services interactive=$interactive"
+
+print_step "preflight" "Checking AUR helper (Arch-like systems)"
 ensure_paru_arch
 
 extra_install=""
@@ -188,8 +234,10 @@ if [[ $dry_run -eq 1 ]]; then
   extra_post+=" --dry-run"
 fi
 
+print_step "install" "Installing packages, building DWM, and deploying base stack"
 # shellcheck disable=SC2086
 run_cmd "DWM_REPO_ROOT='$repo_root' bash -c '\"$repo_root/scripts/install-dwm-stack.sh\" --display-manager \"$dm\" --dm-theme \"$dm_theme\" --install-xinitrc --install-session $extra_install'"
+print_step "post" "Applying user config, rofi/shell setup, and rebuild"
 # shellcheck disable=SC2086
 run_cmd "DWM_REPO_ROOT='$repo_root' bash -c '\"$repo_root/scripts/post-install.sh\" --mode \"$mode\" --force --setup-rofi --setup-shell --display-manager \"$dm\" --dm-theme \"$dm_theme\" --rebuild-dwm $extra_post'"
 
@@ -209,6 +257,7 @@ ensure_session_entry() {
 #!/usr/bin/env sh
 set -eu
 LOG="${XDG_RUNTIME_DIR:-/tmp}/dwm-session.log"
+export PATH="$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
 export XDG_SESSION_TYPE=x11
 export GDK_BACKEND=x11
 export QT_QPA_PLATFORM=xcb
@@ -272,7 +321,9 @@ CONF
 }
 
 if [[ "$dm" != "none" ]]; then
+  print_step "session" "Ensuring display-manager session wrapper and X11 settings"
   ensure_session_entry
 fi
 
-echo "Bootstrap complete."
+print_ok "Bootstrap complete."
+echo "Next: reboot, select DWM in your display manager, and run ~/.local/bin/dwm-health-check.sh"

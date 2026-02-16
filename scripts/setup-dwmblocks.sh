@@ -11,7 +11,8 @@ Optionally installs blocks.h into a dwmblocks source tree and builds it.
 Options:
   --mode symlink|copy         Deploy mode (default: symlink)
   --dwmblocks-src PATH        Path to dwmblocks source repo
-  --build                     Build dwmblocks in --dwmblocks-src after copying blocks.h
+  --build                     Build/install dwmblocks (auto-clones source to /tmp if --dwmblocks-src is not set)
+  --repo-url URL              dwmblocks git URL for auto-clone (default: https://github.com/torrinfail/dwmblocks.git)
   --force                     Replace existing files
   --dry-run                   Print actions only
   -h, --help                  Show this help
@@ -21,6 +22,7 @@ USAGE
 mode="symlink"
 dwmblocks_src=""
 do_build=0
+repo_url="https://github.com/torrinfail/dwmblocks.git"
 force=0
 dry_run=0
 
@@ -37,6 +39,10 @@ while [[ $# -gt 0 ]]; do
     --build)
       do_build=1
       shift
+      ;;
+    --repo-url)
+      repo_url="${2:-}"
+      shift 2
       ;;
     --force)
       force=1
@@ -60,11 +66,6 @@ done
 
 if [[ "$mode" != "symlink" && "$mode" != "copy" ]]; then
   echo "Invalid mode: $mode" >&2
-  exit 1
-fi
-
-if [[ $do_build -eq 1 && -z "$dwmblocks_src" ]]; then
-  echo "--build requires --dwmblocks-src" >&2
   exit 1
 fi
 
@@ -129,7 +130,7 @@ fi
 
 # Backward-compat path for older helper scripts that referenced ~/.local/dwmblocks.
 run_cmd "mkdir -p '$HOME/.local'"
-if [[ ! -e "$dst_dir" && ! -L "$dst_dir" ]]; then
+if [[ $dry_run -ne 1 && ! -e "$dst_dir" && ! -L "$dst_dir" ]]; then
   echo "Expected dwmblocks target missing: $dst_dir" >&2
   exit 1
 fi
@@ -137,8 +138,15 @@ if [[ ! -e "$HOME/.local/dwmblocks" ]]; then
   run_cmd "ln -s '$dst_dir' '$HOME/.local/dwmblocks'"
 fi
 
+auto_tmp_src=""
+if [[ $do_build -eq 1 && -z "$dwmblocks_src" ]]; then
+  auto_tmp_src="$(mktemp -d /tmp/dwmblocks-src.XXXXXX)"
+  dwmblocks_src="$auto_tmp_src/dwmblocks"
+  run_cmd "git clone '$repo_url' '$dwmblocks_src'"
+fi
+
 if [[ -n "$dwmblocks_src" ]]; then
-  if [[ ! -d "$dwmblocks_src" ]]; then
+  if [[ $dry_run -ne 1 && ! -d "$dwmblocks_src" ]]; then
     echo "dwmblocks source path not found: $dwmblocks_src" >&2
     exit 1
   fi
@@ -165,6 +173,10 @@ if [[ -n "$dwmblocks_src" ]]; then
       fi
     fi
   fi
+fi
+
+if [[ -n "$auto_tmp_src" ]]; then
+  run_cmd "rm -rf '$auto_tmp_src'"
 fi
 
 echo "dwmblocks package deployed to $dst_dir"
