@@ -157,9 +157,9 @@ menu_select() {
   local options=("$@")
   local answer
 
-  printf '%s%s%s\n' "$C_BOLD" "$title" "$C_RESET"
+  printf '%s%s%s\n' "$C_BOLD" "$title" "$C_RESET" >&2
   for i in "${!options[@]}"; do
-    printf '  %d) %s\n' "$((i + 1))" "${options[$i]}"
+    printf '  %d) %s\n' "$((i + 1))" "${options[$i]}" >&2
   done
 
   while true; do
@@ -171,7 +171,7 @@ menu_select() {
       printf '%s' "${options[$((answer - 1))]}"
       return 0
     fi
-    print_warn "Invalid choice. Enter a number between 1 and ${#options[@]}."
+    print_warn "Invalid choice. Enter a number between 1 and ${#options[@]}." >&2
   done
 }
 
