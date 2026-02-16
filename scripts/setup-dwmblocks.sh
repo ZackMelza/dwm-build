@@ -77,6 +77,21 @@ run_cmd() {
   fi
 }
 
+patch_dwmblocks_source_if_needed() {
+  local src="$1"
+  local cfile="$src/dwmblocks.c"
+  if [[ ! -f "$cfile" ]]; then
+    return 0
+  fi
+
+  if grep -q 'void termhandler()' "$cfile"; then
+    run_cmd "sed -i \"s/void termhandler();/void termhandler(int signum);/g\" '$cfile'"
+    run_cmd "sed -i \"s/void termhandler()/void termhandler(int signum)/g\" '$cfile'"
+    # Avoid unused-parameter warnings if toolchain treats warnings as errors.
+    run_cmd "sed -i '/void termhandler(int signum)/,/^}/ s/statusContinue = 0;/(void)signum;\\n\tstatusContinue = 0;/' '$cfile'"
+  fi
+}
+
 link_or_copy() {
   local src="$1"
   local dst="$2"
@@ -158,6 +173,7 @@ if [[ -n "$dwmblocks_src" ]]; then
   run_cmd "cp '$dst_dir/blocks.def.h' '$dwmblocks_src/blocks.h'"
 
   if [[ $do_build -eq 1 ]]; then
+    patch_dwmblocks_source_if_needed "$dwmblocks_src"
     run_cmd "make -C '$dwmblocks_src' clean"
     run_cmd "make -C '$dwmblocks_src'"
     if [[ $dry_run -eq 1 ]]; then
