@@ -17,17 +17,17 @@ This repo gives you a portable, profile-aware DWM setup with:
 Run one command on a fresh system:
 
 ```bash
-./scripts/bootstrap.sh --display-manager sddm --dm-theme breeze --mode symlink
+./scripts/bootstrap.sh
 ```
 
-What this does:
+What this does (single entrypoint):
 
 1. Installs packages and builds/installs DWM.
 2. Deploys user config/scripts.
 3. Sets profile and rebuilds DWM for that profile.
 4. Installs rofi suite and (optionally) DM theme.
 
-## Manual Setup (Step by Step)
+## Manual Setup (Optional Advanced)
 
 ### 1) Install packages + DWM
 
@@ -63,7 +63,7 @@ What this does:
 ## Script Reference
 
 ### `scripts/bootstrap.sh`
-One-shot installer for fresh systems.
+One-shot installer for fresh systems. This is the main script that runs full configuration.
 
 Options:
 
@@ -207,11 +207,7 @@ Dry-run before changes:
 - On Arch-like systems, bootstrap installs `paru` automatically if missing.
 - For maximum display-manager stability on old GPUs, prefer `--dm-theme breeze`.
 
-## CI
+## Notes
 
-GitHub Actions workflow: `.github/workflows/check.yml`
-
-Runs:
-
-- `bash -n` for shell syntax
-- `shellcheck` for shell linting
+- Use `scripts/bootstrap.sh` as the only required entrypoint.
+- Other scripts are internal helpers and optional for advanced/manual control.
