@@ -80,15 +80,27 @@ run_cmd() {
 patch_dwmblocks_source_if_needed() {
   local src="$1"
   local cfile="$src/dwmblocks.c"
+  local statuscmd_patch="$src/dwmblocks-statuscmd-b6b0be4.diff"
   if [[ ! -f "$cfile" ]]; then
     return 0
   fi
 
+  # Enable clickable blocks (BUTTON/BLOCK_BUTTON) when the patch file exists
+  # in the cloned dwmblocks source and hasn't been applied yet.
+  if [[ -f "$statuscmd_patch" ]] && ! grep -q 'buttonhandler' "$cfile"; then
+    run_cmd "patch -d '$src' -N -p1 < '$statuscmd_patch' || true"
+  fi
+
+  # Older sources may still need a termhandler signature fix for strict compilers.
   if grep -q 'void termhandler()' "$cfile"; then
     run_cmd "sed -i \"s/void termhandler();/void termhandler(int signum);/g\" '$cfile'"
     run_cmd "sed -i \"s/void termhandler()/void termhandler(int signum)/g\" '$cfile'"
     # Avoid unused-parameter warnings if toolchain treats warnings as errors.
     run_cmd "sed -i '/void termhandler(int signum)/,/^}/ s/statusContinue = 0;/(void)signum;\\n\tstatusContinue = 0;/' '$cfile'"
+  fi
+
+  if ! grep -Eq 'BLOCK_BUTTON|setenv\\(\"BUTTON\"' "$cfile"; then
+    echo "WARN: dwmblocks click support patch not detected in source ($src)." >&2
   fi
 }
 

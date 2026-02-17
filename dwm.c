@@ -91,7 +91,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, switchtotag;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -137,6 +137,7 @@ typedef struct {
 	const char *title;
 	unsigned int tags;
 	int isfloating;
+	int switchtotag;
 	int monitor;
 } Rule;
 
@@ -170,6 +171,8 @@ static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
 static Atom getatomprop(Client *c, Atom prop);
 static int getrootptr(int *x, int *y);
+static int getstatusbarpid(void);
+static int getstatusbarsig(int x);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
@@ -202,10 +205,12 @@ static void setfullscreen(Client *c, int fullscreen);
 static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
+static void sigstatusbar(const Arg *arg);
 static void seturgent(Client *c, int urg);
 static void showhide(Client *c);
 static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
+static void tagandview(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
@@ -236,8 +241,12 @@ static void zoom(const Arg *arg);
 
 /* variables */
 static const char broken[] = "broken";
+static char rawstext[256];
 static char stext[256];
 static int screen;
+static int statuspid = -1;
+static int statussig = 0;
+static int statusw;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh;               /* bar height */
 static int lrpad;            /* sum of left and right padding for text */
@@ -286,6 +295,7 @@ applyrules(Client *c)
 
 	/* rule matching */
 	c->isfloating = 0;
+	c->switchtotag = 0;
 	c->tags = 0;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
@@ -298,6 +308,7 @@ applyrules(Client *c)
 		&& (!r->instance || strstr(instance, r->instance)))
 		{
 			c->isfloating = r->isfloating;
+			c->switchtotag |= r->switchtotag;
 			c->tags |= r->tags;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
@@ -446,9 +457,10 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext))
+		else if (ev->x > selmon->ww - statusw) {
 			click = ClkStatusText;
-		else
+			statussig = getstatusbarsig(ev->x);
+		} else
 			click = ClkWinTitle;
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
@@ -459,7 +471,9 @@ buttonpress(XEvent *e)
 	for (i = 0; i < LENGTH(buttons); i++)
 		if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
 		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
-			buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+			buttons[i].func(
+				click == ClkTagBar && buttons[i].arg.i == 0 ? &arg :
+				click == ClkStatusText ? &(Arg) { .i = ev->button } : &buttons[i].arg);
 }
 
 void
@@ -715,7 +729,7 @@ drawbar(Monitor *m)
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
+		tw = statusw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
 		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
 	}
 
@@ -891,6 +905,64 @@ getrootptr(int *x, int *y)
 	Window dummy;
 
 	return XQueryPointer(dpy, root, &dummy, &dummy, x, y, &di, &di, &dui);
+}
+
+int
+getstatusbarpid(void)
+{
+	char buf[32], cmd[64] = "pidof -s " STATUSBAR;
+	FILE *fp = popen(cmd, "r");
+
+	if (!fp)
+		return -1;
+	if (!fgets(buf, sizeof(buf), fp)) {
+		pclose(fp);
+		return -1;
+	}
+	pclose(fp);
+	return strtol(buf, NULL, 10);
+}
+
+int
+getstatusbarsig(int x)
+{
+	char buf[256];
+	char *p;
+	int i, sig = 0, width;
+	unsigned char ch;
+
+	x -= selmon->ww - statusw;
+	if (x < 0)
+		return 0;
+
+	i = 0;
+	for (p = rawstext; *p; p++) {
+		ch = *p;
+		if (ch < ' ') {
+			if (i) {
+				buf[i] = '\0';
+				width = TEXTW(buf) - lrpad;
+				if (x < width)
+					return sig;
+				x -= width;
+				i = 0;
+			}
+			sig = ch;
+			continue;
+		}
+		if (i < (int)sizeof(buf) - 1)
+			buf[i++] = ch;
+	}
+	if (i) {
+		buf[i] = '\0';
+		width = TEXTW(buf) - lrpad;
+		if (x < width)
+			return sig;
+	}
+
+	if (sig == 0 && *rawstext)
+		return 1;
+	return 0;
 }
 
 long
@@ -1088,6 +1160,12 @@ manage(Window w, XWindowAttributes *wa)
 	if (c->mon == selmon)
 		unfocus(selmon->sel, 0);
 	c->mon->sel = c;
+	if (c->switchtotag) {
+		Arg a = {.ui = c->tags};
+		if (c->mon != selmon)
+			selmon = c->mon;
+		view(&a);
+	}
 	arrange(c->mon);
 	XMapWindow(dpy, c->win);
 	focus(NULL);
@@ -1645,6 +1723,23 @@ setup(void)
 }
 
 void
+sigstatusbar(const Arg *arg)
+{
+	union sigval sv;
+
+	if (!statussig)
+		return;
+	if (statuspid <= 0)
+		statuspid = getstatusbarpid();
+	if (statuspid <= 0)
+		return;
+
+	sv.sival_int = arg->i;
+	if (sigqueue(statuspid, SIGRTMIN + statussig, sv) == -1)
+		statuspid = -1;
+}
+
+void
 seturgent(Client *c, int urg)
 {
 	XWMHints *wmh;
@@ -1704,6 +1799,15 @@ tag(const Arg *arg)
 		selmon->sel->tags = arg->ui & TAGMASK;
 		focus(NULL);
 		arrange(selmon);
+	}
+}
+
+void
+tagandview(const Arg *arg)
+{
+	if (selmon->sel && arg->ui & TAGMASK) {
+		tag(arg);
+		view(arg);
 	}
 }
 
@@ -2036,8 +2140,16 @@ updatesizehints(Client *c)
 void
 updatestatus(void)
 {
-	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
-		strcpy(stext, "dwm-"VERSION);
+	char *src, *dst;
+
+	if (!gettextprop(root, XA_WM_NAME, rawstext, sizeof(rawstext)))
+		strcpy(rawstext, "dwm-"VERSION);
+
+	for (src = rawstext, dst = stext; *src && dst < stext + sizeof(stext) - 1; src++)
+		if ((unsigned char)*src >= ' ')
+			*dst++ = *src;
+	*dst = '\0';
+
 	drawbar(selmon);
 }
 

@@ -164,6 +164,7 @@ menu_select() {
 
   while true; do
     read -r -p "Choose [${default_index}]: " answer
+    answer="$(printf '%s' "$answer" | tr -d '[:space:]')"
     if [[ -z "$answer" ]]; then
       answer="$default_index"
     fi

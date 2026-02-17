@@ -325,6 +325,7 @@ install_to_user_bin "$repo_root/scripts/rebuild-dwm-profile.sh" "$HOME/.local/bi
 install_to_user_bin "$repo_root/scripts/dwm-power-menu.sh" "$HOME/.local/bin/dwm-power-menu.sh"
 install_to_user_bin "$repo_root/scripts/post-install.sh" "$HOME/.local/bin/post-install.sh"
 install_to_user_bin "$repo_root/scripts/setup-dwmblocks.sh" "$HOME/.local/bin/setup-dwmblocks.sh"
+install_to_user_bin "$repo_root/scripts/setup-notification-service.sh" "$HOME/.local/bin/setup-notification-service.sh"
 install_to_user_bin "$repo_root/scripts/setup-rofi-suite.sh" "$HOME/.local/bin/setup-rofi-suite.sh"
 install_to_user_bin "$repo_root/scripts/setup-shell-suite.sh" "$HOME/.local/bin/setup-shell-suite.sh"
 install_to_user_bin "$repo_root/scripts/rofi/rofi-beats.sh" "$HOME/.local/bin/rofi-beats.sh"
@@ -339,6 +340,11 @@ install_to_user_bin "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bi
 install_to_user_bin "$repo_root/scripts/generate-keybind-cheatsheet.sh" "$HOME/.local/bin/generate-keybind-cheatsheet.sh"
 install_to_user_bin "$repo_root/scripts/show-keybinds.sh" "$HOME/.local/bin/show-keybinds.sh"
 run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force --build"
+if [[ $dry_run -eq 1 ]]; then
+  run_cmd "'$HOME/.local/bin/setup-notification-service.sh' --dry-run"
+else
+  run_cmd "'$HOME/.local/bin/setup-notification-service.sh'"
+fi
 if [[ $backup -eq 1 ]]; then
   run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force --backup"
 else

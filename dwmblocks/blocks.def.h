@@ -2,6 +2,7 @@
 
 static const Block blocks[] = {
   // Icon, command, interval (s), signal
+  {"", "~/.config/dwmblocks/scripts/power.sh", 0, 8},
   {"VOL ", "~/.config/dwmblocks/scripts/volume.sh", 0, 1},
   {"NET ", "~/.config/dwmblocks/scripts/network.sh", 5, 2},
   {"CPU ", "~/.config/dwmblocks/scripts/cpu.sh", 5, 3},

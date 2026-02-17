@@ -176,6 +176,7 @@ scripts=(
   setup-dwmblocks.sh
   setup-rofi-suite.sh
   setup-shell-suite.sh
+  setup-notification-service.sh
   setup-display-manager-theme.sh
   health-check.sh
   uninstall-dwm-stack.sh
@@ -202,8 +203,13 @@ keybind_args=""
 if [[ -n "$profile" ]]; then
   keybind_args="--profile '$profile'"
 fi
+notif_args=""
+if [[ $dry_run -eq 1 ]]; then
+  notif_args="--dry-run"
+fi
 run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/set-dwm-keybind-profile.sh' $keybind_args"
 run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode '$mode' --force"
+run_cmd "'$HOME/.local/bin/setup-notification-service.sh' $notif_args"
 
 if [[ $setup_rofi -eq 1 ]]; then
   if [[ $backup -eq 1 ]]; then

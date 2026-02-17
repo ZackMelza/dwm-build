@@ -28,15 +28,15 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "Pavucontrol", NULL,    NULL,       0,            1,           -1 },
-	{ "Nm-connection-editor", NULL, NULL, 0,            1,           -1 },
-	{ "Blueman-manager", NULL, NULL,      0,            1,           -1 },
-	{ "firefox",  NULL,       NULL,       1 << 1,       0,           -1 },
-	{ "brave-browser", NULL,  NULL,       1 << 1,       0,           -1 },
-	{ "Code",     NULL,       NULL,       1 << 2,       0,           -1 },
-	{ "discord",  NULL,       NULL,       1 << 7,       0,           -1 },
+	/* class      instance    title       tags mask     isfloating   switchtotag monitor */
+	{ "Gimp",     NULL,       NULL,       0,            1,           0,          -1 },
+	{ "Pavucontrol", NULL,    NULL,       0,            1,           0,          -1 },
+	{ "Nm-connection-editor", NULL, NULL, 0,            1,           0,          -1 },
+	{ "Blueman-manager", NULL, NULL,      0,            1,           0,          -1 },
+	{ "firefox",  NULL,       NULL,       1 << 1,       0,           0,          -1 },
+	{ "brave-browser", NULL,  NULL,       1 << 1,       0,           1,          -1 },
+	{ "Code",     NULL,       NULL,       1 << 2,       0,           0,          -1 },
+	{ "discord",  NULL,       NULL,       1 << 7,       0,           0,          -1 },
 };
 
 /* layout(s) */
@@ -56,12 +56,13 @@ static const Layout layouts[] = {
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
+	{ MODKEY|ControlMask,           KEY,      tag,            {.ui = 1 << TAG} }, \
+	{ MODKEY|ShiftMask,             KEY,      tagandview,     {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
+#define STATUSBAR "dwmblocks"
 #include "profiles/config-profile.h"
 
 /* commands */
@@ -155,7 +156,11 @@ static const Button buttons[] = {
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
+	{ ClkStatusText,        0,              Button1,        sigstatusbar,    {0} },
+	{ ClkStatusText,        0,              Button2,        sigstatusbar,    {0} },
+	{ ClkStatusText,        0,              Button3,        sigstatusbar,    {0} },
+	{ ClkStatusText,        0,              Button4,        sigstatusbar,    {0} },
+	{ ClkStatusText,        0,              Button5,        sigstatusbar,    {0} },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
