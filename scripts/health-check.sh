@@ -28,6 +28,7 @@ echo "DWM stack health check"
 for c in dwm rofi dmenu kitty zsh picom dunst feh playerctl brightnessctl; do
   check_cmd "$c"
 done
+check_cmd xautolock
 
 for c in rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh dwm-autostart.sh dwm-power-menu.sh show-keybinds.sh; do
   check_cmd "$c"
@@ -45,6 +46,24 @@ if pgrep -x dwmblocks >/dev/null 2>&1; then
   echo "[OK] process: dwmblocks running"
 else
   echo "[WARN] process: dwmblocks not running"
+fi
+
+if pgrep -x dunst >/dev/null 2>&1; then
+  echo "[OK] process: dunst running"
+else
+  echo "[WARN] process: dunst not running"
+fi
+
+if pgrep -f "wallpaper-rotator.sh" >/dev/null 2>&1; then
+  echo "[OK] process: wallpaper rotation running"
+else
+  echo "[WARN] process: wallpaper rotation not running"
+fi
+
+if pgrep -f "idle-manager.sh|xautolock" >/dev/null 2>&1; then
+  echo "[OK] process: idle manager running"
+else
+  echo "[WARN] process: idle manager not running"
 fi
 
 if [[ $missing -ne 0 ]]; then

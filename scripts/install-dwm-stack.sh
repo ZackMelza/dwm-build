@@ -149,10 +149,10 @@ if command -v readlink >/dev/null 2>&1; then
 fi
 repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
-common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst network-manager-gnome network-manager blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-gnome network-manager blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
 
 laptop_pkgs_arch="tlp tlp-rdw"
 laptop_pkgs_debian="tlp"
@@ -318,7 +318,10 @@ install_to_user_bin() {
 install_to_user_bin "$repo_root/scripts/dwm-autostart.sh" "$HOME/.local/bin/dwm-autostart.sh"
 install_to_user_bin "$repo_root/scripts/initial-boot.sh" "$HOME/.local/bin/initial-boot.sh"
 install_to_user_bin "$repo_root/scripts/start-polkit-agent.sh" "$HOME/.local/bin/start-polkit-agent.sh"
+install_to_user_bin "$repo_root/scripts/start-picom.sh" "$HOME/.local/bin/start-picom.sh"
 install_to_user_bin "$repo_root/scripts/set-random-wallpaper.sh" "$HOME/.local/bin/set-random-wallpaper.sh"
+install_to_user_bin "$repo_root/scripts/wallpaper-rotator.sh" "$HOME/.local/bin/wallpaper-rotator.sh"
+install_to_user_bin "$repo_root/scripts/idle-manager.sh" "$HOME/.local/bin/idle-manager.sh"
 install_to_user_bin "$repo_root/scripts/set-dwm-profile.sh" "$HOME/.local/bin/set-dwm-profile.sh"
 install_to_user_bin "$repo_root/scripts/set-dwm-keybind-profile.sh" "$HOME/.local/bin/set-dwm-keybind-profile.sh"
 install_to_user_bin "$repo_root/scripts/rebuild-dwm-profile.sh" "$HOME/.local/bin/rebuild-dwm-profile.sh"
@@ -339,6 +342,8 @@ install_to_user_bin "$repo_root/scripts/health-check.sh" "$HOME/.local/bin/dwm-h
 install_to_user_bin "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bin/dwm-uninstall.sh"
 install_to_user_bin "$repo_root/scripts/generate-keybind-cheatsheet.sh" "$HOME/.local/bin/generate-keybind-cheatsheet.sh"
 install_to_user_bin "$repo_root/scripts/show-keybinds.sh" "$HOME/.local/bin/show-keybinds.sh"
+run_cmd "mkdir -p '$HOME/.config/picom'"
+run_cmd "install -m 644 '$repo_root/picom/picom.conf' '$HOME/.config/picom/picom.conf'"
 run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force --build"
 if [[ $dry_run -eq 1 ]]; then
   run_cmd "'$HOME/.local/bin/setup-notification-service.sh' --dry-run"

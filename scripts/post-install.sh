@@ -168,7 +168,10 @@ scripts=(
   dwm-autostart.sh
   initial-boot.sh
   start-polkit-agent.sh
+  start-picom.sh
   set-random-wallpaper.sh
+  wallpaper-rotator.sh
+  idle-manager.sh
   set-dwm-profile.sh
   set-dwm-keybind-profile.sh
   rebuild-dwm-profile.sh
@@ -193,6 +196,7 @@ for script in "${scripts[@]}"; do
 done
 
 link_or_copy "$repo_root/xinitrc" "$HOME/.xinitrc"
+link_or_copy "$repo_root/picom" "$HOME/.config/picom"
 
 profile_args="--force"
 if [[ -n "$profile" ]]; then

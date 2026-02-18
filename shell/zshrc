@@ -11,19 +11,26 @@ fi
 plugins=(
   git
   archlinux
-  zsh-autosuggestions
-  zsh-syntax-highlighting
 )
+
+if [[ "${DWM_ZSH_HEAVY_PLUGINS:-0}" == "1" ]]; then
+  plugins+=(
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+  )
+fi
 
 if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
   source "$ZSH/oh-my-zsh.sh"
 fi
 
-# Hypr-style terminal banner if optional tools exist.
-if command -v pokemon-colorscripts >/dev/null 2>&1 && command -v fastfetch >/dev/null 2>&1; then
-  pokemon-colorscripts --no-title -s -r | fastfetch -c "$HOME/.config/fastfetch/config-pokemon.jsonc" --logo-type file-raw --logo-height 10 --logo-width 5 --logo -
-elif command -v fastfetch >/dev/null 2>&1; then
-  fastfetch
+# Optional terminal banner. Disabled by default to keep shell startup fast.
+if [[ "${DWM_SHOW_SHELL_BANNER:-0}" == "1" ]]; then
+  if command -v pokemon-colorscripts >/dev/null 2>&1 && command -v fastfetch >/dev/null 2>&1; then
+    pokemon-colorscripts --no-title -s -r | fastfetch -c "$HOME/.config/fastfetch/config-pokemon.jsonc" --logo-type file-raw --logo-height 10 --logo-width 5 --logo -
+  elif command -v fastfetch >/dev/null 2>&1; then
+    fastfetch
+  fi
 fi
 
 if command -v lsd >/dev/null 2>&1; then

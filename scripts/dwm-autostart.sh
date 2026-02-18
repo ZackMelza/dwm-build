@@ -47,12 +47,25 @@ if [[ -x "$script_dir/set-random-wallpaper.sh" ]]; then
   "$script_dir/set-random-wallpaper.sh" >/dev/null 2>&1 || true
 fi
 
+if enabled DWM_AUTOSTART_WALLPAPER_ROTATION; then
+  run_once wallpaper-rotator "$script_dir/wallpaper-rotator.sh"
+fi
+
 if enabled DWM_AUTOSTART_DUNST; then
+  if command -v systemctl >/dev/null 2>&1; then
+    if systemctl --user status dwm-dunst.service >/dev/null 2>&1; then
+      systemctl --user start dwm-dunst.service >/dev/null 2>&1 || true
+    fi
+  fi
   run_once dunst dunst
 fi
 
 if enabled DWM_AUTOSTART_PICOM; then
-  run_once picom picom
+  if [[ -x "$script_dir/start-picom.sh" ]]; then
+    run_once picom "$script_dir/start-picom.sh"
+  else
+    run_once picom picom
+  fi
 fi
 
 if enabled DWM_AUTOSTART_NM_APPLET; then
@@ -75,6 +88,10 @@ if enabled DWM_AUTOSTART_DWMBLOCKS; then
   elif [[ -x /usr/bin/dwmblocks ]]; then
     run_once dwmblocks /usr/bin/dwmblocks
   fi
+fi
+
+if enabled DWM_AUTOSTART_IDLE_MANAGER; then
+  run_once idle-manager "$script_dir/idle-manager.sh"
 fi
 
 if ! pgrep -u "$USER" -f "polkit.*authentication-agent" >/dev/null 2>&1; then

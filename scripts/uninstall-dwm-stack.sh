@@ -49,7 +49,7 @@ restore_latest() {
   fi
 }
 
-for f in dwm-autostart.sh initial-boot.sh start-polkit-agent.sh set-random-wallpaper.sh set-dwm-profile.sh set-dwm-keybind-profile.sh rebuild-dwm-profile.sh dwm-power-menu.sh setup-dwmblocks.sh setup-notification-service.sh setup-rofi-suite.sh setup-shell-suite.sh setup-display-manager-theme.sh rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh show-keybinds.sh generate-keybind-cheatsheet.sh health-check.sh bootstrap.sh dwm-bootstrap.sh dwm-health-check.sh dwm-uninstall.sh; do
+for f in dwm-autostart.sh initial-boot.sh start-polkit-agent.sh start-picom.sh set-random-wallpaper.sh wallpaper-rotator.sh idle-manager.sh set-dwm-profile.sh set-dwm-keybind-profile.sh rebuild-dwm-profile.sh dwm-power-menu.sh setup-dwmblocks.sh setup-notification-service.sh setup-rofi-suite.sh setup-shell-suite.sh setup-display-manager-theme.sh rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh show-keybinds.sh generate-keybind-cheatsheet.sh health-check.sh bootstrap.sh dwm-bootstrap.sh dwm-health-check.sh dwm-uninstall.sh; do
   run_cmd "rm -f '$HOME/.local/bin/$f'"
 done
 
@@ -60,6 +60,7 @@ fi
 if [[ $restore -eq 1 ]]; then
   restore_latest "$HOME/.xinitrc"
   restore_latest "$HOME/.config/rofi"
+  restore_latest "$HOME/.config/picom"
   restore_latest "$HOME/.config/kitty"
   restore_latest "$HOME/.zshrc"
 fi
@@ -78,6 +79,10 @@ fi
 
 if [[ -L "$HOME/.config/kitty" ]]; then
   run_cmd "rm -f '$HOME/.config/kitty'"
+fi
+
+if [[ -L "$HOME/.config/picom" ]]; then
+  run_cmd "rm -f '$HOME/.config/picom'"
 fi
 
 if [[ -L "$HOME/.zshrc" ]]; then
