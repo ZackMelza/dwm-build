@@ -90,6 +90,14 @@ if enabled DWM_AUTOSTART_DWMBLOCKS; then
   fi
 fi
 
+if enabled DWM_AUTOSTART_TRAY; then
+  if [[ -x "$script_dir/start-tray.sh" ]]; then
+    run_once stalonetray "$script_dir/start-tray.sh"
+  elif command -v stalonetray >/dev/null 2>&1; then
+    run_once stalonetray stalonetray
+  fi
+fi
+
 if enabled DWM_AUTOSTART_IDLE_MANAGER; then
   run_once idle-manager "$script_dir/idle-manager.sh"
 fi

@@ -10,6 +10,8 @@ This repo gives you a portable, profile-aware DWM setup with:
 - kitty terminal + zsh shell defaults (Oh My Zsh compatible)
 - optional SDDM/LightDM theming
 - dwmblocks package + scripts
+- built-in stack/tag navigation helpers (`movestack`, `shiftview`, `shifttag`)
+- lightweight tray via `stalonetray` autostart
 - bootstrap, health-check, and uninstall helpers
 
 ## Fast Start (Recommended)
@@ -55,6 +57,9 @@ What this does (single entrypoint):
 - `Super+Alt+C`: rofi calc
 - `Super+Shift+M`: RofiBeats
 - `Super+Q`: close/kill focused app
+- `Super+Shift+J/K`: move focused window up/down in stack
+- `Super+[ / ]`: previous/next tag view
+- `Super+Shift+[ / ]`: send focused window to previous/next tag
 - `Ctrl+Alt+L`: lock session
 - `Super+Shift+O`: rofi zsh theme picker
 - `Super+Shift+T`: rofi kitty theme picker

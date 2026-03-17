@@ -149,10 +149,10 @@ if command -v readlink >/dev/null 2>&1; then
 fi
 repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
 
-common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom dmenu suckless-tools kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-gnome network-manager blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
-common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom stalonetray dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom stalonetray dmenu suckless-tools kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-gnome network-manager blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_fedora="gcc make git pkgconf-pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server-Xorg xorg-x11-xinit xrandr xsetroot setxkbmap feh picom stalonetray dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policycoreutils-python-utils polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
+common_pkgs_opensuse="gcc make git pkg-config libX11-devel libXft-devel libXinerama-devel xorg-x11-server xinit xrandr xsetroot setxkbmap feh picom stalonetray dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock NetworkManager-applet NetworkManager-tui blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
 
 laptop_pkgs_arch="tlp tlp-rdw"
 laptop_pkgs_debian="tlp"
@@ -319,6 +319,7 @@ install_to_user_bin "$repo_root/scripts/dwm-autostart.sh" "$HOME/.local/bin/dwm-
 install_to_user_bin "$repo_root/scripts/initial-boot.sh" "$HOME/.local/bin/initial-boot.sh"
 install_to_user_bin "$repo_root/scripts/start-polkit-agent.sh" "$HOME/.local/bin/start-polkit-agent.sh"
 install_to_user_bin "$repo_root/scripts/start-picom.sh" "$HOME/.local/bin/start-picom.sh"
+install_to_user_bin "$repo_root/scripts/start-tray.sh" "$HOME/.local/bin/start-tray.sh"
 install_to_user_bin "$repo_root/scripts/set-random-wallpaper.sh" "$HOME/.local/bin/set-random-wallpaper.sh"
 install_to_user_bin "$repo_root/scripts/wallpaper-rotator.sh" "$HOME/.local/bin/wallpaper-rotator.sh"
 install_to_user_bin "$repo_root/scripts/idle-manager.sh" "$HOME/.local/bin/idle-manager.sh"
