@@ -1,221 +1,170 @@
 # DWM Build
 
-This repo gives you a portable, profile-aware DWM setup with:
+A portable, Xorg-first DWM setup that aims to feel close to your Hyprland workflow, but lighter for weaker hardware.
 
-- distro-aware package installation
-- laptop/desktop detection
-- profile-based DWM build + runtime config
-- Xorg-only session defaults (no Wayland dependency)
-- Hypr-like rofi tooling (RofiBeats/search/calc)
-- kitty terminal + zsh shell defaults (Oh My Zsh compatible)
-- optional SDDM/LightDM theming
-- dwmblocks package + scripts
-- built-in stack/tag navigation helpers (`movestack`, `shiftview`, `shifttag`)
-- lightweight tray via `stalonetray` autostart
-- bootstrap, health-check, and uninstall helpers
+## What You Get
 
-## Fast Start (Recommended)
+- one main installer (`scripts/bootstrap.sh`)
+- distro-aware package install
+- laptop/desktop auto-detection
+- display manager support (`sddm`, `lightdm`, `greetd`, `ly`, or none)
+- `kitty` + `zsh` defaults
+- rofi tools (`RofiBeats`, search, calc, theme pickers)
+- `dwmblocks` build + config deployment
+- lightweight tray (`stalonetray`) autostart
+- profile-based autostart behavior
 
-Run one command on a fresh system:
+## Quick Start (Recommended)
+
+From a fresh system:
 
 ```bash
 ./scripts/bootstrap.sh
 ```
 
-What this does (single entrypoint):
+The bootstrap script is interactive and asks for numbered choices.
 
-1. Installs packages and builds/installs DWM.
-2. Deploys user config/scripts.
-3. Sets profile and rebuilds DWM for that profile.
-4. Builds/installs `dwmblocks` and deploys `~/.config/dwmblocks`.
-5. Installs rofi suite and (optionally) DM theme.
+After install:
 
-## Manual Setup (Optional Advanced)
-
-### 1) Install packages + DWM
+1. Reboot.
+2. In your display manager, select `DWM` session.
+3. Log in.
+4. Run health check:
 
 ```bash
-./scripts/install-dwm-stack.sh --display-manager sddm --dm-theme breeze --install-xinitrc --install-session --enable-services --backup
+~/.local/bin/dwm-health-check.sh
 ```
 
-### 2) Deploy user config and extras
+## Non-Interactive Example
 
 ```bash
-./scripts/post-install.sh --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme breeze --rebuild-dwm --backup
+./scripts/bootstrap.sh \
+  --non-interactive \
+  --profile auto \
+  --display-manager sddm \
+  --dm-theme breeze \
+  --mode copy \
+  --enable-services
 ```
 
-## Start DWM
+## Start Session
 
-- With display manager: choose `DWM` at login.
-- With `startx`: run `startx` (after installing `~/.xinitrc`).
+- Display manager: choose `DWM` at login.
+- `startx`: install `~/.xinitrc` and run `startx`.
 
 ## Keybind Highlights
 
-- `Super+H`: keybind cheat-sheet
+- `Super+H`: show keybind cheat-sheet
 - `Super+R`: rofi launcher
 - `Super+S`: rofi web search
 - `Super+Alt+C`: rofi calc
 - `Super+Shift+M`: RofiBeats
-- `Super+Q`: close/kill focused app
-- `Super+Shift+J/K`: move focused window up/down in stack
-- `Super+[ / ]`: previous/next tag view
-- `Super+Shift+[ / ]`: send focused window to previous/next tag
+- `Super+Q`: kill focused window
 - `Ctrl+Alt+L`: lock session
-- `Super+Shift+O`: rofi zsh theme picker
-- `Super+Shift+T`: rofi kitty theme picker
-- `Super+Shift+S`: screenshot area
+- `Super+Shift+S`: area screenshot
 - `Super+Print`: full screenshot
+- `Super+Shift+J/K`: move focused window in stack
+- `Super+[ / ]`: previous/next tag
+- `Super+Shift+[ / ]`: move focused window to previous/next tag
 
-## Script Reference
+## Main Scripts
 
 ### `scripts/bootstrap.sh`
-One-shot installer for fresh systems. This is the main script that runs full configuration.
+The primary entrypoint. Use this unless you explicitly want manual control.
 
 Options:
 
-- Prompts interactively by default with numbered choices for profile/DM/theme/mode/services
-- `--profile auto|laptop|desktop`: force machine profile
-- `--display-manager lightdm|sddm|greetd|ly|none`: login manager to set up
-- `--dm-theme none|breeze|hyprlike`: apply DM theme preset (`breeze` recommended for compatibility)
-- `--mode symlink|copy`: deployment mode for post-install files
-- `--enable-services`: enable NetworkManager/bluetooth/tlp/DM when available
-- `--disable-services`: skip service enablement
-- `--non-interactive`: skip prompts and use flags/defaults
-- `--dry-run`: print actions without applying changes
+- `--profile auto|laptop|desktop`
+- `--display-manager lightdm|sddm|greetd|ly|none`
+- `--dm-theme none|breeze|hyprlike`
+- `--mode symlink|copy`
+- `--enable-services`
+- `--disable-services`
+- `--non-interactive`
+- `--dry-run`
 
 ### `scripts/install-dwm-stack.sh`
-Installs dependencies, builds DWM, installs helper scripts.
-
-Options:
-
-- `--profile laptop|desktop`: force profile (default is auto-detect)
-- `--display-manager NAME`: `lightdm|sddm|greetd|ly|none`
-- `--dm-theme NAME`: `none|breeze|hyprlike` (used for `sddm`/`lightdm`)
-- `--backup`: keep timestamped backups before overwrite where supported
-- `--enable-services`: enable core services
-- `--install-xinitrc`: install repo `xinitrc` to `~/.xinitrc`
-- `--install-session`: install `sessions/dwm.desktop` to `/usr/share/xsessions`
-- `--dry-run`: print commands only
-- `-h, --help`: show help
+Installs packages, builds DWM, installs helper scripts.
 
 ### `scripts/post-install.sh`
-Deploys user-level files, profile config, optional rofi/theme, optional rebuild.
-
-Options:
-
-- `--mode symlink|copy`: symlink from repo, or copy files into home
-- `--profile laptop|desktop`: force profile while configuring
-- `--install-session`: install X session desktop entry
-- `--setup-rofi`: install rofi suite
-- `--setup-shell`: install kitty + zsh suite
-- `--display-manager NAME`: `lightdm|sddm` (required if using `--dm-theme`)
-- `--dm-theme breeze|hyprlike`: apply DM theme
-- `--rebuild-dwm`: rebuild/install DWM after deployment
-- `--backup`: backup target files before overwrite
-- `--force`: overwrite existing files/links
-- `--dry-run`: print actions only
-- `-h, --help`: show help
-
-### `scripts/rebuild-dwm-profile.sh`
-Applies profile + keybind profile, rebuilds DWM, installs DWM.
-
-Options:
-
-- `--profile laptop|desktop`: force profile
-- `--dry-run`: print actions only
-- `--no-install`: build only, skip `make install`
-- `-h, --help`: show help
-
-### `scripts/setup-rofi-suite.sh`
-Installs the full `rofi/` directory and rofi helper scripts.
-
-Options:
-
-- `--mode symlink|copy`: deploy by symlink or copy
-- `--force`: replace existing files
-- `--backup`: move existing targets to timestamped backup before replace
-- `--dry-run`: print actions only
-
-### `scripts/setup-shell-suite.sh`
-Installs kitty config and zsh defaults (Oh My Zsh + agnosterzak theme compatibility).
-
-Options:
-
-- `--mode symlink|copy`: deploy by symlink or copy
-- `--force`: replace existing files
-- `--backup`: move existing targets to timestamped backup before replace
-- `--dry-run`: print actions only
-
-### `scripts/setup-display-manager-theme.sh`
-Applies login screen theme config.
-
-Options:
-
-- `--dm sddm|lightdm`: target display manager
-- `--theme breeze|hyprlike`: theme preset
-- `--backup`: backup old DM config/theme before overwrite
-- `--dry-run`: print actions only
+Deploys user files and optional extras (`rofi`, `shell`, `dm-theme`, rebuild).
 
 ### `scripts/setup-dwmblocks.sh`
-Deploys `dwmblocks` config package; can also build/install dwmblocks.
+Deploys `dwmblocks` config and can build/install `dwmblocks`.
 
-Options:
-
-- `--mode symlink|copy`: deploy mode
-- `--dwmblocks-src PATH`: local dwmblocks source tree path
-- `--build`: build/install dwmblocks (auto-clones source to `/tmp` if `--dwmblocks-src` is not set)
-- `--repo-url URL`: override dwmblocks clone URL used by `--build`
-- `--force`: overwrite existing targets
-- `--dry-run`: print actions only
-- `-h, --help`: show help
+### `scripts/fix-dwm-login.sh`
+Repair helper when display manager login/session setup breaks.
 
 ### `scripts/health-check.sh`
-Verifies required commands/files and reports missing parts.
+Checks required binaries/files and reports what is missing.
 
-Usage:
+## Manual Install (Advanced)
 
-```bash
-./scripts/health-check.sh
-```
-
-### `scripts/uninstall-dwm-stack.sh`
-Removes deployed user-side stack and optional DM/session changes.
-
-Options:
-
-- `--restore-backups`: restore latest backup copies where present
-- `--remove-session`: remove `/usr/share/xsessions/dwm.desktop`
-- `--dm sddm|lightdm|none`: remove DM theme config for selected DM
-- `--dry-run`: print actions only
-
-## Profile Commands
+Step 1:
 
 ```bash
-./scripts/set-dwm-profile.sh --profile laptop --force
-./scripts/set-dwm-keybind-profile.sh --profile laptop
-./scripts/rebuild-dwm-profile.sh --profile laptop
+./scripts/install-dwm-stack.sh \
+  --display-manager sddm \
+  --dm-theme breeze \
+  --install-xinitrc \
+  --install-session \
+  --enable-services \
+  --backup
 ```
 
-Use `desktop` instead of `laptop` when needed.
-
-## Useful Checks
-
-Dry-run before changes:
+Step 2:
 
 ```bash
-./scripts/install-dwm-stack.sh --dry-run --display-manager sddm --dm-theme breeze --install-xinitrc --install-session --enable-services
-./scripts/post-install.sh --dry-run --mode symlink --force --setup-rofi --setup-shell --display-manager sddm --dm-theme breeze --rebuild-dwm
+./scripts/post-install.sh \
+  --mode copy \
+  --force \
+  --setup-rofi \
+  --setup-shell \
+  --display-manager sddm \
+  --dm-theme breeze \
+  --rebuild-dwm \
+  --backup
 ```
 
-## Xorg Compatibility
+## Xorg + Compatibility Notes
 
-- Session environment is forced to X11 (`XDG_SESSION_TYPE=x11`, `GDK_BACKEND=x11`, `QT_QPA_PLATFORM=xcb`).
+- Stack is configured for X11 (`XDG_SESSION_TYPE=x11`, `GDK_BACKEND=x11`, `QT_QPA_PLATFORM=xcb`).
 - SDDM is forced to `DisplayServer=x11`.
-- On Arch-like systems, bootstrap installs `paru` automatically if missing.
-- For maximum display-manager stability on old GPUs, prefer `--dm-theme breeze`.
-- Session/autostart PATH is hardened so `dwmblocks` and user scripts are found under display managers.
+- On Arch-like distros, bootstrap auto-installs `paru` if missing.
+- For old GPUs, use `--dm-theme breeze` for safest DM behavior.
 
-## Notes
+## Troubleshooting
 
-- Use `scripts/bootstrap.sh` as the only required entrypoint.
-- Other scripts are internal helpers and optional for advanced/manual control.
+### Black screen after login
+
+Run from TTY:
+
+```bash
+./scripts/fix-dwm-login.sh
+```
+
+Then reboot and try DWM session again.
+
+### Missing command/file errors
+
+Run:
+
+```bash
+~/.local/bin/dwm-health-check.sh
+```
+
+Install/re-run bootstrap until required items are `[OK]`.
+
+### Dry-run before applying changes
+
+```bash
+./scripts/bootstrap.sh --dry-run
+```
+
+## Uninstall
+
+```bash
+./scripts/uninstall-dwm-stack.sh --dry-run
+```
+
+Then remove `--dry-run` when you are ready.
