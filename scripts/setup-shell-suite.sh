@@ -105,6 +105,9 @@ fi
 run_cmd "mkdir -p '$HOME/.config'"
 link_or_copy "$repo_root/kitty" "$HOME/.config/kitty" 1
 link_or_copy "$repo_root/shell/zshrc" "$HOME/.zshrc"
+if [[ -f "$repo_root/shell/zprofile" ]]; then
+  link_or_copy "$repo_root/shell/zprofile" "$HOME/.zprofile"
+fi
 
 if [[ ! -d "$HOME/.oh-my-zsh" ]] && command -v git >/dev/null 2>&1; then
   run_cmd "git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git '$HOME/.oh-my-zsh'"

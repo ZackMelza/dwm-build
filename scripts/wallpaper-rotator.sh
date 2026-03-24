@@ -16,6 +16,8 @@ run_setter() {
   fi
 }
 
+run_setter
+
 while true; do
   sleep "$interval"
   run_setter

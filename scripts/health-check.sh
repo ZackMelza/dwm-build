@@ -30,17 +30,31 @@ for c in dwm rofi dmenu kitty zsh picom dunst feh playerctl brightnessctl; do
 done
 check_cmd xautolock
 
-for c in rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh dwm-autostart.sh dwm-power-menu.sh show-keybinds.sh; do
+for c in rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh dwm-autostart.sh dwm-power-menu.sh show-keybinds.sh start-tray.sh; do
   check_cmd "$c"
 done
 
 check_file "$HOME/.config/environment.d/99-dwm.conf"
 check_file "$HOME/.config/dwm/host.conf"
-check_file "$HOME/.config/rofi"
-check_file "$HOME/.config/kitty"
+if [[ -e "$HOME/.config/rofi" ]]; then
+  echo "[OK] file: $HOME/.config/rofi"
+else
+  echo "[WARN] file: $HOME/.config/rofi missing (run setup-rofi-suite.sh for themed rofi menus)"
+fi
+if [[ -e "$HOME/.config/kitty" ]]; then
+  echo "[OK] file: $HOME/.config/kitty"
+else
+  echo "[WARN] file: $HOME/.config/kitty missing (shell suite not deployed)"
+fi
 check_file "$HOME/.zshrc"
 check_file "$HOME/.xinitrc"
 check_file "$HOME/.config/dwmblocks"
+
+if command -v dwm-health-check.sh >/dev/null 2>&1; then
+  echo "[OK] command: dwm-health-check.sh"
+else
+  echo "[WARN] command: dwm-health-check.sh alias missing"
+fi
 
 if pgrep -x dwmblocks >/dev/null 2>&1; then
   echo "[OK] process: dwmblocks running"

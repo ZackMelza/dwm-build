@@ -58,7 +58,7 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeStatus1, SchemeStatus2, SchemeStatus3, SchemeStatus4, SchemeStatus5 }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
@@ -83,6 +83,11 @@ typedef struct {
 
 typedef struct Monitor Monitor;
 typedef struct Client Client;
+typedef struct {
+	char text[256];
+	int sig;
+} StatusBlock;
+
 struct Client {
 	char name[256];
 	float mina, maxa;
@@ -163,6 +168,7 @@ static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
+static int drawstatusbar(Monitor *m, int draw);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
@@ -175,6 +181,7 @@ static int getstatusbarpid(void);
 static int getstatusbarsig(int x);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
+static int getstatusblocks(StatusBlock *blocks, int maxblocks);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
@@ -728,9 +735,7 @@ drawbar(Monitor *m)
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
-		drw_setscheme(drw, scheme[SchemeNorm]);
-		tw = statusw = TEXTW(stext) - lrpad + 2; /* 2px right padding */
-		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
+		tw = statusw = drawstatusbar(m, 1);
 	}
 
 	for (c = m->clients; c; c = c->next) {
@@ -765,6 +770,39 @@ drawbar(Monitor *m)
 		}
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+}
+
+int
+drawstatusbar(Monitor *m, int draw)
+{
+	enum { statuspad = 12, statusgap = 6, statusright = 8 };
+	StatusBlock blocks[32];
+	int blockcount, i, x, w, totalw;
+
+	blockcount = getstatusblocks(blocks, LENGTH(blocks));
+	if (blockcount <= 0)
+		return 0;
+
+	totalw = statusright;
+	for (i = 0; i < blockcount; i++) {
+		w = TEXTW(blocks[i].text) - lrpad + statuspad * 2;
+		totalw += w;
+		if (i + 1 < blockcount)
+			totalw += statusgap;
+	}
+
+	if (!draw)
+		return totalw;
+
+	x = m->ww - totalw + statusright;
+	for (i = 0; i < blockcount; i++) {
+		w = TEXTW(blocks[i].text) - lrpad + statuspad * 2;
+		drw_setscheme(drw, scheme[SchemeStatus1 + (i % 5)]);
+		drw_text(drw, x, 0, w, bh, statuspad, blocks[i].text, 0);
+		x += w + statusgap;
+	}
+
+	return totalw;
 }
 
 void
@@ -926,43 +964,72 @@ getstatusbarpid(void)
 int
 getstatusbarsig(int x)
 {
-	char buf[256];
-	char *p;
-	int i, sig = 0, width;
-	unsigned char ch;
+	enum { statuspad = 12, statusgap = 6, statusright = 8 };
+	StatusBlock blocks[32];
+	int blockcount, i, width;
 
 	x -= selmon->ww - statusw;
 	if (x < 0)
 		return 0;
 
-	i = 0;
+	blockcount = getstatusblocks(blocks, LENGTH(blocks));
+	if (blockcount <= 0)
+		return 0;
+
+	x -= statusright;
+	if (x < 0)
+		return 0;
+
+	for (i = 0; i < blockcount; i++) {
+		width = TEXTW(blocks[i].text) - lrpad + statuspad * 2;
+		if (x < width)
+			return blocks[i].sig;
+		x -= width;
+		if (i + 1 < blockcount) {
+			if (x < statusgap)
+				return 0;
+			x -= statusgap;
+		}
+	}
+
+	return 0;
+}
+
+int
+getstatusblocks(StatusBlock *blocks, int maxblocks)
+{
+	char *p;
+	int blockcount = 0, i = 0, sig = 0;
+	unsigned char ch;
+
+	if (!blocks || maxblocks <= 0 || !*rawstext)
+		return 0;
+
 	for (p = rawstext; *p; p++) {
 		ch = *p;
 		if (ch < ' ') {
-			if (i) {
-				buf[i] = '\0';
-				width = TEXTW(buf) - lrpad;
-				if (x < width)
-					return sig;
-				x -= width;
+			if (i > 0 && blockcount < maxblocks) {
+				blocks[blockcount].text[i] = '\0';
+				blocks[blockcount].sig = sig ? sig : 1;
+				blockcount++;
 				i = 0;
 			}
 			sig = ch;
 			continue;
 		}
-		if (i < (int)sizeof(buf) - 1)
-			buf[i++] = ch;
-	}
-	if (i) {
-		buf[i] = '\0';
-		width = TEXTW(buf) - lrpad;
-		if (x < width)
-			return sig;
+		if (blockcount >= maxblocks)
+			continue;
+		if (i < (int)sizeof(blocks[blockcount].text) - 1)
+			blocks[blockcount].text[i++] = ch;
 	}
 
-	if (sig == 0 && *rawstext)
-		return 1;
-	return 0;
+	if (i > 0 && blockcount < maxblocks) {
+		blocks[blockcount].text[i] = '\0';
+		blocks[blockcount].sig = sig ? sig : 1;
+		blockcount++;
+	}
+
+	return blockcount;
 }
 
 long

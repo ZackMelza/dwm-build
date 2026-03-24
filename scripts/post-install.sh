@@ -169,6 +169,7 @@ scripts=(
   initial-boot.sh
   start-polkit-agent.sh
   start-picom.sh
+  start-tray.sh
   set-random-wallpaper.sh
   wallpaper-rotator.sh
   idle-manager.sh
@@ -194,6 +195,20 @@ for script in "${scripts[@]}"; do
   link_or_copy "$src" "$dst"
   run_cmd "chmod +x '$dst'"
 done
+
+for script in rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-kitty-theme.sh; do
+  src="$repo_root/scripts/rofi/$script"
+  dst="$HOME/.local/bin/$script"
+  link_or_copy "$src" "$dst"
+  run_cmd "chmod +x '$dst'"
+done
+
+link_or_copy "$repo_root/scripts/bootstrap.sh" "$HOME/.local/bin/dwm-bootstrap.sh"
+run_cmd "chmod +x '$HOME/.local/bin/dwm-bootstrap.sh'"
+link_or_copy "$repo_root/scripts/health-check.sh" "$HOME/.local/bin/dwm-health-check.sh"
+run_cmd "chmod +x '$HOME/.local/bin/dwm-health-check.sh'"
+link_or_copy "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bin/dwm-uninstall.sh"
+run_cmd "chmod +x '$HOME/.local/bin/dwm-uninstall.sh'"
 
 link_or_copy "$repo_root/xinitrc" "$HOME/.xinitrc"
 link_or_copy "$repo_root/picom" "$HOME/.config/picom"

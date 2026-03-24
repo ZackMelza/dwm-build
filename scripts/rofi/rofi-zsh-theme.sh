@@ -4,6 +4,11 @@ set -euo pipefail
 themes_dir="$HOME/.oh-my-zsh/themes"
 zshrc="$HOME/.zshrc"
 rofi_theme="${ROFI_CONF_DIR:-$HOME/.config/rofi}/config-zsh-theme.rasi"
+rofi_args=(-i -dmenu -p "Zsh Theme")
+
+if [[ -f "$rofi_theme" ]]; then
+  rofi_args+=(-config "$rofi_theme")
+fi
 
 if [[ ! -d "$themes_dir" ]]; then
   command -v notify-send >/dev/null 2>&1 && notify-send "Rofi Zsh Theme" "$HOME/.oh-my-zsh/themes not found"
@@ -16,7 +21,7 @@ if [[ ${#themes[@]} -eq 0 ]]; then
   exit 1
 fi
 
-choice="$(printf '%s\n' "Random" "${themes[@]}" | rofi -i -dmenu -p "Zsh Theme" -config "$rofi_theme")"
+choice="$(printf '%s\n' "Random" "${themes[@]}" | rofi "${rofi_args[@]}")"
 [[ -n "$choice" ]] || exit 0
 
 if [[ "$choice" == "Random" ]]; then

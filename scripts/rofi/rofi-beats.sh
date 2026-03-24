@@ -13,7 +13,12 @@ notify_msg() {
 }
 
 rofi_menu() {
-  rofi -i -dmenu -p "$1" -config "$rofi_theme"
+  local prompt="$1"
+  local rofi_args=(-i -dmenu -p "$prompt")
+  if [[ -f "$rofi_theme" ]]; then
+    rofi_args+=(-config "$rofi_theme")
+  fi
+  rofi "${rofi_args[@]}"
 }
 
 mpv_running() {
@@ -69,13 +74,21 @@ play_local() {
 }
 
 play_url() {
-  url="$(printf '' | rofi -dmenu -p "Paste URL" -config "$rofi_theme")"
+  local rofi_args=(-dmenu -p "Paste URL")
+  if [[ -f "$rofi_theme" ]]; then
+    rofi_args+=(-config "$rofi_theme")
+  fi
+  url="$(printf '' | rofi "${rofi_args[@]}")"
   [[ -n "$url" ]] || return
   start_mpv "$url" "$url"
 }
 
 search_youtube() {
-  query="$(printf '' | rofi -dmenu -p "YouTube Search" -config "$rofi_theme")"
+  local rofi_args=(-dmenu -p "YouTube Search")
+  if [[ -f "$rofi_theme" ]]; then
+    rofi_args+=(-config "$rofi_theme")
+  fi
+  query="$(printf '' | rofi "${rofi_args[@]}")"
   [[ -n "$query" ]] || return
 
   if command -v yt-dlp >/dev/null 2>&1; then

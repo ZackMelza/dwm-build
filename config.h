@@ -2,22 +2,36 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 2;         /* border pixel of windows */
-static const unsigned int gappx     = 14;        /* gaps between windows */
-static const unsigned int snap      = 24;        /* snap pixel */
+static const unsigned int borderpx  = 3;         /* border pixel of windows */
+static const unsigned int gappx     = 18;        /* gaps between windows */
+static const unsigned int snap      = 32;        /* snap pixel */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "monospace:size=11" };
-static const char dmenufont[]       = "monospace:size=11";
-static const char col_gray1[]       = "#10151b";
-static const char col_gray2[]       = "#2f3b4a";
-static const char col_gray3[]       = "#b7c2cf";
-static const char col_gray4[]       = "#e8eef5";
-static const char col_cyan[]        = "#4f7cff";
+static const char *fonts[]          = {
+	"JetBrainsMono Nerd Font:size=12",
+	"JetBrainsMono:size=12",
+	"monospace:size=11"
+};
+static const char dmenufont[]       = "monospace:size=12";
+static const char col_gray1[]       = "#0f1115";
+static const char col_gray2[]       = "#283241";
+static const char col_gray3[]       = "#c4ccd6";
+static const char col_gray4[]       = "#f5f7fa";
+static const char col_cyan[]        = "#7c8cff";
+static const char col_status1_bg[]  = "#3a315d";
+static const char col_status2_bg[]  = "#243f52";
+static const char col_status3_bg[]  = "#304b3d";
+static const char col_status4_bg[]  = "#58403f";
+static const char col_status5_bg[]  = "#4a4e2d";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
+	[SchemeStatus1] = { col_gray4, col_status1_bg, col_status1_bg },
+	[SchemeStatus2] = { col_gray4, col_status2_bg, col_status2_bg },
+	[SchemeStatus3] = { col_gray4, col_status3_bg, col_status3_bg },
+	[SchemeStatus4] = { col_gray4, col_status4_bg, col_status4_bg },
+	[SchemeStatus5] = { col_gray4, col_status5_bg, col_status5_bg },
 };
 
 /* tagging */
@@ -40,15 +54,15 @@ static const Rule rules[] = {
 };
 
 /* layout(s) */
-static const float mfact     = 0.58; /* factor of master area size [0.05..0.95] */
+static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ "[T]",      tile },    /* first entry is default */
-	{ "[F]",      NULL },    /* no layout function means floating behavior */
+	{ "[]=",      tile },    /* first entry is default */
+	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
 };
 
@@ -70,17 +84,17 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "kitty", NULL };
-static const char *browser[] = { "brave", NULL };
-static const char *filemanager[] = { "nemo", NULL };
-static const char *code[] = { "code", NULL };
-static const char *discord[] = { "discord", NULL };
+static const char *termcmd[]  = { "/bin/sh", "-c", "for cmd in kitty alacritty st xterm; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exit 1", NULL };
+static const char *browser[] = { "/bin/sh", "-c", "for cmd in brave-browser brave firefox; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exit 1", NULL };
+static const char *filemanager[] = { "/bin/sh", "-c", "for cmd in nemo thunar pcmanfm nautilus; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exec xdg-open \"$HOME\"", NULL };
+static const char *code[] = { "/bin/sh", "-c", "for cmd in code codium; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exit 1", NULL };
+static const char *discord[] = { "/bin/sh", "-c", "for cmd in discord vesktop; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exit 1", NULL };
 static const char *rofi[] = { "rofi", "-show", "drun", "-modi", "drun,filebrowser,run,window", NULL };
-static const char *rofibeats[] = { "rofi-beats.sh", NULL };
-static const char *rofisearch[] = { "rofi-search.sh", NULL };
-static const char *roficalc[] = { "rofi-calc.sh", NULL };
-static const char *rofizshtheme[] = { "rofi-zsh-theme.sh", NULL };
-static const char *rofikittytheme[] = { "rofi-kitty-theme.sh", NULL };
+static const char *rofibeats[] = { "/bin/sh", "-c", "if command -v rofi-beats.sh >/dev/null 2>&1; then exec rofi-beats.sh; fi; exec rofi -show drun", NULL };
+static const char *rofisearch[] = { "/bin/sh", "-c", "if command -v rofi-search.sh >/dev/null 2>&1; then exec rofi-search.sh; fi; exec rofi -show drun", NULL };
+static const char *roficalc[] = { "/bin/sh", "-c", "if command -v rofi-calc.sh >/dev/null 2>&1; then exec rofi-calc.sh; fi; exec rofi -show drun", NULL };
+static const char *rofizshtheme[] = { "/bin/sh", "-c", "if command -v rofi-zsh-theme.sh >/dev/null 2>&1; then exec rofi-zsh-theme.sh; fi; exec rofi -show drun", NULL };
+static const char *rofikittytheme[] = { "/bin/sh", "-c", "if command -v rofi-kitty-theme.sh >/dev/null 2>&1; then exec rofi-kitty-theme.sh; fi; exec rofi -show drun", NULL };
 static const char *lockcmd[] = { "loginctl", "lock-session", NULL };
 static const char *netcfg[] = { "nm-connection-editor", NULL };
 static const char *screenshot[] = { "/bin/sh", "-c", "maim -s | xclip -selection clipboard -t image/png", NULL };

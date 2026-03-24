@@ -4,6 +4,15 @@ set -euo pipefail
 conf_dir="${ROFI_CONF_DIR:-$HOME/.config/rofi}"
 rofi_theme="$conf_dir/config-calc.rasi"
 
+rofi_prompt() {
+  local result="$1"
+  local rofi_args=(-dmenu -p "Calc" -mesg "$result")
+  if [[ -f "$rofi_theme" ]]; then
+    rofi_args+=(-config "$rofi_theme")
+  fi
+  printf '' | rofi "${rofi_args[@]}"
+}
+
 calc_expr() {
   local expr="$1"
   if command -v qalc >/dev/null 2>&1; then
@@ -28,7 +37,7 @@ PY
 
 result=""
 while true; do
-  expr="$(printf '' | rofi -dmenu -p 'Calc' -mesg "$result" -config "$rofi_theme")"
+  expr="$(rofi_prompt "$result")"
   [[ -n "$expr" ]] || exit 0
   result="$(calc_expr "$expr")"
   if command -v xclip >/dev/null 2>&1; then
