@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck disable=SC1091
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
+
 usage() {
   cat <<'USAGE'
 Usage: install-dwm-stack.sh [options]
@@ -142,12 +145,7 @@ source /etc/os-release
 os_id="${ID:-unknown}"
 os_like="${ID_LIKE:-}"
 
-script_path="${BASH_SOURCE[0]}"
-if command -v readlink >/dev/null 2>&1; then
-  resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
-  [[ -n "$resolved" ]] && script_path="$resolved"
-fi
-repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
+repo_root="$(resolve_repo_root "${BASH_SOURCE[0]}")"
 
 common_pkgs_arch="base-devel git pkgconf libx11 libxft libxinerama xorg-server xorg-xinit xorg-xrandr xorg-xsetroot xorg-setxkbmap feh picom stalonetray dmenu kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-applet blueman pipewire pipewire-pulse wireplumber pavucontrol playerctl brightnessctl acpi polkit-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
 common_pkgs_debian="build-essential git pkg-config libx11-dev libxft-dev libxinerama-dev xorg xinit x11-xserver-utils feh picom stalonetray dmenu suckless-tools kitty zsh zsh-autosuggestions zsh-syntax-highlighting fzf rofi dunst xautolock network-manager-gnome network-manager blueman pipewire wireplumber pavucontrol playerctl brightnessctl acpi policykit-1-gnome xdg-user-dirs maim xclip mpv yt-dlp socat"
@@ -315,11 +313,25 @@ install_to_user_bin() {
   run_cmd "install -m 755 '$src' '$dst'"
 }
 
+for wrapper in \
+  dwm-bootstrap \
+  dwm-post-install \
+  dwm-rebuild \
+  dwm-health-check \
+  dwm-setup-dwmblocks \
+  dwm-setup-rofi \
+  dwm-setup-shell \
+  dwm-uninstall
+do
+  install_to_user_bin "$repo_root/bin/$wrapper" "$HOME/.local/bin/$wrapper"
+done
+
 install_to_user_bin "$repo_root/scripts/dwm-autostart.sh" "$HOME/.local/bin/dwm-autostart.sh"
 install_to_user_bin "$repo_root/scripts/initial-boot.sh" "$HOME/.local/bin/initial-boot.sh"
 install_to_user_bin "$repo_root/scripts/start-polkit-agent.sh" "$HOME/.local/bin/start-polkit-agent.sh"
 install_to_user_bin "$repo_root/scripts/start-picom.sh" "$HOME/.local/bin/start-picom.sh"
 install_to_user_bin "$repo_root/scripts/start-tray.sh" "$HOME/.local/bin/start-tray.sh"
+install_to_user_bin "$repo_root/scripts/launch-terminal.sh" "$HOME/.local/bin/launch-terminal.sh"
 install_to_user_bin "$repo_root/scripts/set-random-wallpaper.sh" "$HOME/.local/bin/set-random-wallpaper.sh"
 install_to_user_bin "$repo_root/scripts/wallpaper-rotator.sh" "$HOME/.local/bin/wallpaper-rotator.sh"
 install_to_user_bin "$repo_root/scripts/idle-manager.sh" "$HOME/.local/bin/idle-manager.sh"
@@ -338,28 +350,28 @@ install_to_user_bin "$repo_root/scripts/rofi/rofi-calc.sh" "$HOME/.local/bin/rof
 install_to_user_bin "$repo_root/scripts/rofi/rofi-zsh-theme.sh" "$HOME/.local/bin/rofi-zsh-theme.sh"
 install_to_user_bin "$repo_root/scripts/rofi/rofi-kitty-theme.sh" "$HOME/.local/bin/rofi-kitty-theme.sh"
 install_to_user_bin "$repo_root/scripts/setup-display-manager-theme.sh" "$HOME/.local/bin/setup-display-manager-theme.sh"
-install_to_user_bin "$repo_root/scripts/bootstrap.sh" "$HOME/.local/bin/dwm-bootstrap.sh"
-install_to_user_bin "$repo_root/scripts/health-check.sh" "$HOME/.local/bin/dwm-health-check.sh"
-install_to_user_bin "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bin/dwm-uninstall.sh"
+install_to_user_bin "$repo_root/bin/dwm-bootstrap" "$HOME/.local/bin/dwm-bootstrap.sh"
+install_to_user_bin "$repo_root/bin/dwm-health-check" "$HOME/.local/bin/dwm-health-check.sh"
+install_to_user_bin "$repo_root/bin/dwm-uninstall" "$HOME/.local/bin/dwm-uninstall.sh"
 install_to_user_bin "$repo_root/scripts/generate-keybind-cheatsheet.sh" "$HOME/.local/bin/generate-keybind-cheatsheet.sh"
 install_to_user_bin "$repo_root/scripts/show-keybinds.sh" "$HOME/.local/bin/show-keybinds.sh"
 run_cmd "mkdir -p '$HOME/.config/picom'"
 run_cmd "install -m 644 '$repo_root/picom/picom.conf' '$HOME/.config/picom/picom.conf'"
-run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode copy --force --build"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-dwmblocks.sh' --mode copy --force --build"
 if [[ $dry_run -eq 1 ]]; then
-  run_cmd "'$HOME/.local/bin/setup-notification-service.sh' --dry-run"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-notification-service.sh' --dry-run"
 else
-  run_cmd "'$HOME/.local/bin/setup-notification-service.sh'"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-notification-service.sh'"
 fi
 if [[ $backup -eq 1 ]]; then
-  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force --backup"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-rofi-suite.sh' --mode copy --force --backup"
 else
-  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode copy --force"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-rofi-suite.sh' --mode copy --force"
 fi
 if [[ $backup -eq 1 ]]; then
-  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode copy --force --backup"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-shell-suite.sh' --mode copy --force --backup --set-default-shell"
 else
-  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode copy --force"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-shell-suite.sh' --mode copy --force --set-default-shell"
 fi
 
 if [[ $install_xinitrc -eq 1 ]]; then
@@ -385,9 +397,9 @@ install_display_manager
 
 if [[ "$dm_theme" != "none" && ( "$display_manager" == "sddm" || "$display_manager" == "lightdm" ) ]]; then
   if [[ $backup -eq 1 ]]; then
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
   else
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
   fi
 fi
 

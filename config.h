@@ -84,7 +84,7 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "/bin/sh", "-c", "for cmd in kitty alacritty st xterm; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exit 1", NULL };
+static const char *termcmd[]  = { "/usr/sbin/kitty", NULL };
 static const char *browser[] = { "/bin/sh", "-c", "for cmd in brave-browser brave firefox; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exit 1", NULL };
 static const char *filemanager[] = { "/bin/sh", "-c", "for cmd in nemo thunar pcmanfm nautilus; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exec xdg-open \"$HOME\"", NULL };
 static const char *code[] = { "/bin/sh", "-c", "for cmd in code codium; do if command -v \"$cmd\" >/dev/null 2>&1; then exec \"$cmd\"; fi; done; exit 1", NULL };

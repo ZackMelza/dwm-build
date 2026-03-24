@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck disable=SC1091
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
+
 usage() {
   cat <<'USAGE'
-Usage: setup-shell-suite.sh [--mode symlink|copy] [--force] [--backup] [--dry-run]
+Usage: setup-shell-suite.sh [--mode symlink|copy] [--force] [--backup] [--set-default-shell] [--dry-run]
 
 Installs kitty + zsh shell defaults close to the Hyprland setup.
 USAGE
@@ -13,6 +16,7 @@ mode="symlink"
 force=0
 backup=0
 dry_run=0
+set_default_shell=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -30,6 +34,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       dry_run=1
+      shift
+      ;;
+    --set-default-shell)
+      set_default_shell=1
       shift
       ;;
     -h|--help)
@@ -89,18 +97,7 @@ link_or_copy() {
   fi
 }
 
-if [[ -n "${DWM_REPO_ROOT:-}" && -d "${DWM_REPO_ROOT}/scripts" ]]; then
-  repo_root="$DWM_REPO_ROOT"
-elif [[ -f "$HOME/.config/dwm/repo_root" ]]; then
-  repo_root="$(sed -n '1p' "$HOME/.config/dwm/repo_root")"
-else
-  script_path="${BASH_SOURCE[0]}"
-  if command -v readlink >/dev/null 2>&1; then
-    resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
-    [[ -n "$resolved" ]] && script_path="$resolved"
-  fi
-  repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
-fi
+repo_root="$(resolve_repo_root "${BASH_SOURCE[0]}")"
 
 run_cmd "mkdir -p '$HOME/.config'"
 link_or_copy "$repo_root/kitty" "$HOME/.config/kitty" 1
@@ -124,6 +121,21 @@ if [[ -d "$HOME/.oh-my-zsh" ]]; then
 
   if [[ -f "$repo_root/shell/themes/agnosterzak.zsh-theme" ]]; then
     run_cmd "install -Dm644 '$repo_root/shell/themes/agnosterzak.zsh-theme' '$HOME/.oh-my-zsh/themes/agnosterzak.zsh-theme'"
+  fi
+fi
+
+if [[ $set_default_shell -eq 1 ]]; then
+  target_shell="$(resolve_zsh_shell || true)"
+  current_shell="$(getent passwd "$USER" | cut -d: -f7 2>/dev/null || printf '%s\n' "${SHELL:-}")"
+
+  if [[ -z "$target_shell" ]]; then
+    echo "zsh is not installed or not executable." >&2
+    exit 1
+  fi
+
+  if [[ "$current_shell" != "$target_shell" ]]; then
+    echo "Switching default shell to $target_shell. You may be prompted for your password."
+    run_cmd "chsh -s '$target_shell' '$USER'"
   fi
 fi
 

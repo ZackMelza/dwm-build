@@ -17,8 +17,14 @@ source $ZSH/oh-my-zsh.sh
 # Check archlinux plugin commands here
 # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/archlinux
 
-# Display fastfetch banner
-fastfetch -c $HOME/.config/fastfetch/config-compact.jsonc
+# Display fastfetch banner when available. Use the compact config if the user has one.
+if command -v fastfetch >/dev/null 2>&1; then
+    if [[ -f "$HOME/.config/fastfetch/config-compact.jsonc" ]]; then
+        fastfetch -c "$HOME/.config/fastfetch/config-compact.jsonc"
+    else
+        fastfetch
+    fi
+fi
 
 # Set-up icons for files/directories in terminal using lsd
 alias ls='lsd'

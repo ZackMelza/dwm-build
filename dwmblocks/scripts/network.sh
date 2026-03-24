@@ -10,10 +10,8 @@ case "$button" in
     fi
     ;;
   3)
-    if command -v alacritty >/dev/null 2>&1 && command -v nmtui >/dev/null 2>&1; then
-      alacritty -e nmtui >/dev/null 2>&1 &
-    elif command -v xterm >/dev/null 2>&1 && command -v nmtui >/dev/null 2>&1; then
-      xterm -e nmtui >/dev/null 2>&1 &
+    if command -v launch-terminal.sh >/dev/null 2>&1 && command -v nmtui >/dev/null 2>&1; then
+      launch-terminal.sh nmtui >/dev/null 2>&1 &
     fi
     ;;
 esac

@@ -4,25 +4,17 @@ set -euo pipefail
 button="${BLOCK_BUTTON:-${BUTTON:-0}}"
 
 open_monitor() {
-  if command -v alacritty >/dev/null 2>&1; then
+  if command -v launch-terminal.sh >/dev/null 2>&1; then
     if command -v btop >/dev/null 2>&1; then
-      alacritty -e btop >/dev/null 2>&1 &
+      launch-terminal.sh btop >/dev/null 2>&1 &
       return
     fi
     if command -v htop >/dev/null 2>&1; then
-      alacritty -e htop >/dev/null 2>&1 &
+      launch-terminal.sh htop >/dev/null 2>&1 &
       return
     fi
-    alacritty -e top >/dev/null 2>&1 &
+    launch-terminal.sh top >/dev/null 2>&1 &
     return
-  fi
-
-  if command -v xterm >/dev/null 2>&1; then
-    if command -v htop >/dev/null 2>&1; then
-      xterm -e htop >/dev/null 2>&1 &
-      return
-    fi
-    xterm -e top >/dev/null 2>&1 &
   fi
 }
 

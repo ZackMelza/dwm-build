@@ -5,10 +5,8 @@ button="${BLOCK_BUTTON:-${BUTTON:-0}}"
 
 open_update_terminal() {
   local cmd="$1"
-  if command -v alacritty >/dev/null 2>&1; then
-    alacritty -e /bin/sh -lc "$cmd" >/dev/null 2>&1 &
-  elif command -v xterm >/dev/null 2>&1; then
-    xterm -e /bin/sh -lc "$cmd" >/dev/null 2>&1 &
+  if command -v launch-terminal.sh >/dev/null 2>&1; then
+    launch-terminal.sh /bin/sh -lc "$cmd" >/dev/null 2>&1 &
   fi
 }
 

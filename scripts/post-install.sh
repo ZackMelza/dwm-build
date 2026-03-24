@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck disable=SC1091
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/lib/common.sh"
+
 usage() {
   cat <<'USAGE'
 Usage: post-install.sh [options]
@@ -147,22 +150,29 @@ link_or_copy() {
   fi
 }
 
-if [[ -n "${DWM_REPO_ROOT:-}" && -d "${DWM_REPO_ROOT}/scripts" ]]; then
-  repo_root="$DWM_REPO_ROOT"
-elif [[ -f "$HOME/.config/dwm/repo_root" ]]; then
-  repo_root="$(sed -n '1p' "$HOME/.config/dwm/repo_root")"
-else
-  script_path="${BASH_SOURCE[0]}"
-  if command -v readlink >/dev/null 2>&1; then
-    resolved="$(readlink -f -- "$script_path" 2>/dev/null || true)"
-    [[ -n "$resolved" ]] && script_path="$resolved"
-  fi
-  repo_root="$(cd -- "$(dirname -- "$script_path")/.." && pwd)"
-fi
+repo_root="$(resolve_repo_root "${BASH_SOURCE[0]}")"
 
 run_cmd "mkdir -p '$HOME/.local/bin'"
 run_cmd "mkdir -p '$HOME/.config/dwm'"
 run_cmd "printf '%s\n' '$repo_root' > '$HOME/.config/dwm/repo_root'"
+
+user_bins=(
+  dwm-bootstrap
+  dwm-post-install
+  dwm-rebuild
+  dwm-health-check
+  dwm-setup-dwmblocks
+  dwm-setup-rofi
+  dwm-setup-shell
+  dwm-uninstall
+)
+
+for script in "${user_bins[@]}"; do
+  src="$repo_root/bin/$script"
+  dst="$HOME/.local/bin/$script"
+  link_or_copy "$src" "$dst"
+  run_cmd "chmod +x '$dst'"
+done
 
 scripts=(
   dwm-autostart.sh
@@ -170,6 +180,7 @@ scripts=(
   start-polkit-agent.sh
   start-picom.sh
   start-tray.sh
+  launch-terminal.sh
   set-random-wallpaper.sh
   wallpaper-rotator.sh
   idle-manager.sh
@@ -203,11 +214,11 @@ for script in rofi-beats.sh rofi-search.sh rofi-calc.sh rofi-zsh-theme.sh rofi-k
   run_cmd "chmod +x '$dst'"
 done
 
-link_or_copy "$repo_root/scripts/bootstrap.sh" "$HOME/.local/bin/dwm-bootstrap.sh"
+link_or_copy "$repo_root/bin/dwm-bootstrap" "$HOME/.local/bin/dwm-bootstrap.sh"
 run_cmd "chmod +x '$HOME/.local/bin/dwm-bootstrap.sh'"
-link_or_copy "$repo_root/scripts/health-check.sh" "$HOME/.local/bin/dwm-health-check.sh"
+link_or_copy "$repo_root/bin/dwm-health-check" "$HOME/.local/bin/dwm-health-check.sh"
 run_cmd "chmod +x '$HOME/.local/bin/dwm-health-check.sh'"
-link_or_copy "$repo_root/scripts/uninstall-dwm-stack.sh" "$HOME/.local/bin/dwm-uninstall.sh"
+link_or_copy "$repo_root/bin/dwm-uninstall" "$HOME/.local/bin/dwm-uninstall.sh"
 run_cmd "chmod +x '$HOME/.local/bin/dwm-uninstall.sh'"
 
 link_or_copy "$repo_root/xinitrc" "$HOME/.xinitrc"
@@ -217,7 +228,7 @@ profile_args="--force"
 if [[ -n "$profile" ]]; then
   profile_args="--profile '$profile' --force"
 fi
-run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/set-dwm-profile.sh' $profile_args"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/set-dwm-profile.sh' $profile_args"
 keybind_args=""
 if [[ -n "$profile" ]]; then
   keybind_args="--profile '$profile'"
@@ -226,23 +237,23 @@ notif_args=""
 if [[ $dry_run -eq 1 ]]; then
   notif_args="--dry-run"
 fi
-run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/set-dwm-keybind-profile.sh' $keybind_args"
-run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-dwmblocks.sh' --mode '$mode' --force"
-run_cmd "'$HOME/.local/bin/setup-notification-service.sh' $notif_args"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/set-dwm-keybind-profile.sh' $keybind_args"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-dwmblocks.sh' --mode '$mode' --force"
+run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-notification-service.sh' $notif_args"
 
 if [[ $setup_rofi -eq 1 ]]; then
   if [[ $backup -eq 1 ]]; then
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-rofi-suite.sh' --mode '$mode' --force --backup"
   else
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-rofi-suite.sh' --mode '$mode' --force"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-rofi-suite.sh' --mode '$mode' --force"
   fi
 fi
 
 if [[ $setup_shell -eq 1 ]]; then
   if [[ $backup -eq 1 ]]; then
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-shell-suite.sh' --mode '$mode' --force --backup --set-default-shell"
   else
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-shell-suite.sh' --mode '$mode' --force"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-shell-suite.sh' --mode '$mode' --force --set-default-shell"
   fi
 fi
 
@@ -252,9 +263,9 @@ if [[ "$dm_theme" != "none" ]]; then
     exit 1
   fi
   if [[ $backup -eq 1 ]]; then
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme' --backup"
   else
-    run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
+    run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/setup-display-manager-theme.sh' --dm '$display_manager' --theme '$dm_theme'"
   fi
 fi
 
@@ -263,7 +274,7 @@ if [[ $rebuild_dwm -eq 1 ]]; then
   if [[ -n "$profile" ]]; then
     rebuild_args="--profile '$profile'"
   fi
-  run_cmd "DWM_REPO_ROOT='$repo_root' '$HOME/.local/bin/rebuild-dwm-profile.sh' $rebuild_args"
+  run_cmd "DWM_REPO_ROOT='$repo_root' '$repo_root/scripts/rebuild-dwm-profile.sh' $rebuild_args"
 fi
 
 if [[ $install_session -eq 1 ]]; then

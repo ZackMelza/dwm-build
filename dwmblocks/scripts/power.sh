@@ -17,5 +17,3 @@ case "$button" in
     run_power_menu
     ;;
 esac
-
-printf 'PWR'

@@ -73,6 +73,30 @@ The stack is designed for X11. It sets:
 - `GDK_BACKEND=x11`
 - `QT_QPA_PLATFORM=xcb`
 
+## User Commands
+
+The repo now separates user-facing entrypoints from internal implementation scripts:
+
+- `bin/` contains the commands users are expected to run
+- `scripts/` contains the internal implementation and session plumbing
+
+Installed user-facing commands:
+
+- `~/.local/bin/dwm-bootstrap`
+- `~/.local/bin/dwm-post-install`
+- `~/.local/bin/dwm-rebuild`
+- `~/.local/bin/dwm-health-check`
+- `~/.local/bin/dwm-setup-dwmblocks`
+- `~/.local/bin/dwm-setup-rofi`
+- `~/.local/bin/dwm-setup-shell`
+- `~/.local/bin/dwm-uninstall`
+
+Compatibility aliases are still installed for older names such as:
+
+- `~/.local/bin/dwm-bootstrap.sh`
+- `~/.local/bin/dwm-health-check.sh`
+- `~/.local/bin/dwm-uninstall.sh`
+
 ## Keybind Highlights
 
 - `Super+Return`: terminal
@@ -98,6 +122,12 @@ The stack is designed for X11. It sets:
 
 Primary entry point. Use this unless you have a good reason not to.
 
+User-facing wrapper:
+
+```bash
+~/.local/bin/dwm-bootstrap
+```
+
 Options:
 
 - `--profile auto|laptop|desktop`
@@ -121,9 +151,21 @@ User-level deployment step. It sets up config files, profile files, `rofi`, shel
 
 Use this when packages are already installed and you mainly want to refresh your local setup.
 
+User-facing wrapper:
+
+```bash
+~/.local/bin/dwm-post-install
+```
+
 ### `scripts/setup-dwmblocks.sh`
 
 Deploys the `dwmblocks` config package to `~/.config/dwmblocks`. It can also patch, build, and install `dwmblocks` itself if you point it at a source tree or let it clone one.
+
+User-facing wrapper:
+
+```bash
+~/.local/bin/dwm-setup-dwmblocks
+```
 
 ### `scripts/fix-dwm-login.sh`
 
@@ -132,6 +174,12 @@ Repair helper for broken display manager logins or session startup issues.
 ### `scripts/health-check.sh`
 
 Checks installed commands, deployed files, and a few expected runtime processes.
+
+User-facing wrapper:
+
+```bash
+~/.local/bin/dwm-health-check
+```
 
 ## Manual Install
 
@@ -163,6 +211,56 @@ Step 2:
   --backup
 ```
 
+## Rebuilding After Changes
+
+If you change `dwm` source files such as `config.h`, `config.def.h`, `dwm.c`, or any patch/helper code included at compile time, you must rebuild and reinstall `dwm`.
+
+Recommended:
+
+```bash
+~/.local/bin/dwm-rebuild
+```
+
+That script:
+
+- reapplies the selected profile
+- rebuilds `dwm`
+- runs `sudo make install`
+
+If you only want to test a build without installing it yet:
+
+```bash
+~/.local/bin/dwm-rebuild --no-install
+```
+
+Manual rebuild path:
+
+```bash
+make clean
+make
+sudo make install
+```
+
+Important:
+
+- `make` by itself only rebuilds the binary in the repo
+- `sudo make install` updates the installed `dwm` binary
+- your current session will still be running the old `dwm` process until you restart `dwm` or log out and back in
+
+After installing a rebuilt `dwm`, restart your session before assuming a keybind or config change failed.
+
+If you changed `dwmblocks`, rebuild that separately:
+
+```bash
+~/.local/bin/dwm-setup-dwmblocks --mode symlink --force --build
+```
+
+If you changed user config only, and not compiled `dwm` code, refresh the deployed files with:
+
+```bash
+~/.local/bin/dwm-post-install --mode symlink --force
+```
+
 ## Compatibility Notes
 
 - The setup is built for Xorg, not Wayland.
@@ -187,7 +285,7 @@ Then reboot and try the `DWM` session again.
 Run:
 
 ```bash
-~/.local/bin/dwm-health-check.sh
+~/.local/bin/dwm-health-check
 ```
 
 If it reports missing items, rerun the relevant install step instead of guessing.
